@@ -2,6 +2,8 @@
 """ 此文件用于中文分词前的词库处理，将现有的词库按字数分类"""
 
 import codecs
+import sys
+import re
 
 #获取字典内容
 def get_dict_content (dpath):
@@ -74,31 +76,53 @@ begin_make_new_dict()
 def load_new_dict_file (file_list):
     new_dict = []
     for i in file_list:
-        new_dict.append(file(i).read().split('/'))
+        new_dict.append(cn_encode(file(i).read()).split('/'))
 
     return new_dict
+
+def match_english(s):
+    s = s.encode('gbk')
+    return len(re.search(r"[a-zA-Z0-9:]{2,}",s).group(0))
+
+def is_alnum(s):
+    s = s.encode('gbk')
+    return s.isalnum()
+
+def pre_split (s):
+    s=cn_encode(s)
+    sign = cn_encode("[。，！`《》<>\.,//\n\t\r?]")
+    s=re.sub(sign,'',s)
+    return s
 
 #new_dict_file = ['dict_two.txt','dict_thr.txt','dict_for.txt','dict_fiv.txt','dict_oth.txt']
 #分词，正向最大的长度分词
 def split_article (s,new_dict):
     i=0
+    s = pre_split(s)
     max_len = len(new_dict)
+    max_en_len = 20
     txt_len = len(s)
     word_list = []
-    s = cn_encode(s)
-
     while i<txt_len :
         k = max_len
-        for dindex in range(max_len-1):
+        for dindex in xrange(max_len-1):
+
+            if is_alnum(s[i:i+k]) :
+                en_len = match_english(s[i:i+max_en_len])
+                k = en_len
+                break
+
             if i + k > txt_len:
                 k = txt_len - i
+            if k <= 0:
+                break
             if s[i:i+k] in new_dict[max_len-2-dindex]:
                 break
             k -= 1
-        print s[i:i+k],'/',
         word_list.append(s[i:i+k])
+        if k<=0:
+            break
         i += k
-
     return '/'.join(word_list)
 
 
@@ -137,6 +161,6 @@ Google最近宣布发行一档新股票给目前的股东，亦即实质上将�
 　　答：此一计划于6月可望获得通过，届时Google将会宣布详细情形。"""
     
     new_dict_file = ['dict_two.txt','dict_thr.txt','dict_for.txt','dict_fiv.txt','dict_oth.txt']
-    split_article (s,load_new_dict_file(new_dict_file))
+    print split_article (s,load_new_dict_file(new_dict_file))
     
 test_split_article ()

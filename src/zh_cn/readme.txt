@@ -55,3 +55,5 @@
             HtPosCsw.Add("nt", "机构团体");
             HtPosCsw.Add("nz", "其他专名");
             HtPosCsw.Add("un", "未知词性");
+
+chcp 65001

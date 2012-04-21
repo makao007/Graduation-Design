@@ -1,3 +1,4 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -5,25 +6,41 @@
     <title>XX 相关搜索</title>
     <style type="text/css" media="screen">
         html,body {padding:0px; margin:0px;}
-        body {width:920px; margin:0 auto; text-align:center;} 
+        body {width:920px; margin:0 auto; }
         ul,li,div {padding:0px; margin:0px ; list-style:none;}
-        div#nav  {clear:both; width:100%; height:33px; background:#25262A; color:#BEBEC0;}
+        div#nav  {clear:both; width:100%; height:30px; background:#25262A; color:#BEBEC0; margin-top:10px; padding-top:3px;}
         div#nav ul {padding:0px; margin:0px; list-style:none;}
         div#nav ul li {float:left; list-style:none;  margin:6px 10px; font-size:13px;}
         div#main {margin:10px 0px;height:500px; width:100%; }
         div#main_left,div#main_right {float:left; scroll:auto; height:500px;}
         div#main_left {width:200px; border:1px solid #666; }
-        div#main_left_cate {}
-        div#main_left_content li {height:25px; margin:3px 5px; border-bottom:1px solid #33FFFF; cursor:pointer; display:block; text-align:left; margin-left:10px;}
+        div#main_left_content {padding:0px; margin:0px}
+        div#main_left_content li {height:25px; margin:3px 5px; border-bottom:1px solid #33FFFF; cursor:pointer; display:block; text-align:left;} 
+        div#main_left_content li:hover {background-color:#f3f3f3;}
 
         div#main_right {margin-left:10px; border:1px solid lightblue; width:700px;}
-        div#main_right_title  {clear:both; width:100%;height:30px; margin-top:10px; text-align:left; margin:3px 5px;}
+        div#main_right_title  {clear:both; width:100%;height:30px; margin-top:10px; text-align:left; }
         div#main_right_title ul {}
         div#main_right_title ul li {float:left; }
 
         div#main_right_content {text-align:left; font-size:14px; margin:3px 5px;}
-        div#main_right_content ul {height:30px; margin:3px; border-bottom:1px dashed #e5e5e5;}
+        div#main_right_content ul {height:22px; margin:3px 0px 10px 5px; border-bottom:1px dashed #e5e5e5;}
         div#main_right_content ul li {float:left;}
+
+        div#manage {text-align:left; font-size:14px; border:1px solid #eee; height:500px; scroll:auto;}
+        div#manage_add {width:90px; height:21px; background: red; color:white; padding:6px; border-radius:10px; display:block; float:right; text-align:center;}
+        div#manage_add:hover {color:#eee; }
+
+
+        div#manage_head,div#manage ul {margin-left:10px;}
+        div#manage_head {height:23px; clear:both;}
+        div#manage_head li {float:left;}
+        div#manage ul {clear:both;}
+        div#manage ul li {float:left; border-bottom:1px dashed #e5e5e5; margin-top:10px;}
+
+        div#edit_cate p {margin:20px 0px 1px 0px; padding:0px; font-size:14px;}
+        div#edit_cate input {width:400px; height:30px; font-size:25px;}
+        div#edit_cate textarea {width:400px; height:70px; scroll:auto; overflow-y:auto;}
 
 
         .title {color:black; display:block; background-color:#00FFFF; font-size:14px; height:23px; padding:5px 5px; font-weight:bold; border-bottom:1px solid #666; clear:both; text-align:left;}
@@ -35,6 +52,15 @@
         .item5 {width:200px;}
         .item6 {width:100px;}
 
+        .ctem0,.ctem1,.ctem2,.ctem3,.ctem4,.ctem5 {overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:8px;}
+        .ctem0 {width:50px;}
+        .ctem1 {width:100px;}
+        .ctem2 {width:150px;}
+        .ctem3 {width:300px;}
+        .ctem4 {width:40px; margin-left:20px;}
+        .ctem5 {width:40px;}
+
+        .block {border:1px solid #eee; padding:8px 20px; background-color:#eee;}
     </style>
 </head>
 
@@ -69,7 +95,29 @@
 
 
     <div id="manage">
+        <div class="title">栏目管理</div>
+        <div id="manage_add">新建栏目</div>
+        <div id="manage_head">
+            <li class="ctem0">序号</li>
+            <li class="ctem1">名称</li>
+            <li class="ctem2">关键词</li>
+            <li class="ctem3">网络来源</li>
+            <li class="ctem4">处理</li>
+        </div>
+        <div id="manage_list">
+        </div>
+    </div>
 
+    <div id="edit_cate">
+        <form>
+            <p>条目名称</p>
+            <input type="text" id="edit_cate_name" value="" />
+            <p>关键词列表</p>
+            <textarea ></textarea>
+            <p>网址来源列表</p>
+            <textarea ></textarea>
+            <p><span class='block'>保存</span></p>
+        </form>
     </div>
 
 
@@ -78,7 +126,7 @@
 </body>
 
 <script type="text/javascript" charset="utf-8">
-    mydata = {'names':['google','facebook'], 'data':[[['1','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['2','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['3','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品']], [['1','3/11 11:10:11','0.3111','http://www.facebook/aadld/html','Facebook年报']]]};
+    mydata = {'names':['google','facebook'], 'data':[[['1','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['2','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['3','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品']], [['1','3/11 11:10:11','0.3111','http://www.facebook/aadld/html','Facebook年报']]], 'name_info': [['12','google','Google','http://www.google.com/xx.com;http://baidu.com/axx/aa.xml'],['12','facebook','Facebook;脸谱','http://www.facebook.com']]};
 
 
     function clear_div (id) {
@@ -114,6 +162,27 @@
                 });
     }
 
+    function edit_cate (id) {
+    }
+
+    function del_cate (id) {
+    }
+
+    function load_manage (data) {
+        var div = $("#manage_list");
+        $.each (data, function (index, value ) {
+                var ul = $("<ul/>");
+                $('<li/>').text (index).addClass('ctem0').appendTo(ul);
+                $('<li/>').text (value[1]).addClass('ctem1').appendTo(ul);
+                $('<li/>').text (value[2]).addClass('ctem2').appendTo(ul);
+                $('<li/>').text (value[3]).addClass('ctem3').appendTo(ul);
+                $('<li/>').html('<a href="javascript:void(0);" onclick="edit_cate(' + index + ')">编辑</a>').addClass('ctem4').appendTo(ul);
+                $('<li/>').html('<a href="javascript:void(0);" onclick="del_cate(' + index + ')">删除</a>').addClass('ctem5').appendTo(ul);
+
+                div.append (ul);
+                });
+    }
+
     function load_data(data) {
         load_cate(data);
     }
@@ -123,7 +192,12 @@
         $.get(url,{}, load_data);
     }
 
-    $(document).ready( function () { load_data(mydata.names); $('#main').hide(); });
+    $(document).ready( function () { 
+        load_data(mydata.names); 
+        $('#main').hide(); 
+        $('#manage').hide();
+        load_manage(mydata.name_info);
+        });
 
 </script>
 </html>

@@ -1,0 +1,129 @@
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <script src="jquery.js"></script>
+    <title>XX 相关搜索</title>
+    <style type="text/css" media="screen">
+        html,body {padding:0px; margin:0px;}
+        body {width:920px; margin:0 auto; text-align:center;} 
+        ul,li,div {padding:0px; margin:0px ; list-style:none;}
+        div#nav  {clear:both; width:100%; height:33px; background:#25262A; color:#BEBEC0;}
+        div#nav ul {padding:0px; margin:0px; list-style:none;}
+        div#nav ul li {float:left; list-style:none;  margin:6px 10px; font-size:13px;}
+        div#main {margin:10px 0px;height:500px; width:100%; }
+        div#main_left,div#main_right {float:left; scroll:auto; height:500px;}
+        div#main_left {width:200px; border:1px solid #666; }
+        div#main_left_cate {}
+        div#main_left_content li {height:25px; margin:3px 5px; border-bottom:1px solid #33FFFF; cursor:pointer; display:block; text-align:left; margin-left:10px;}
+
+        div#main_right {margin-left:10px; border:1px solid lightblue; width:700px;}
+        div#main_right_title  {clear:both; width:100%;height:30px; margin-top:10px; text-align:left; margin:3px 5px;}
+        div#main_right_title ul {}
+        div#main_right_title ul li {float:left; }
+
+        div#main_right_content {text-align:left; font-size:14px; margin:3px 5px;}
+        div#main_right_content ul {height:30px; margin:3px; border-bottom:1px dashed #e5e5e5;}
+        div#main_right_content ul li {float:left;}
+
+
+        .title {color:black; display:block; background-color:#00FFFF; font-size:14px; height:23px; padding:5px 5px; font-weight:bold; border-bottom:1px solid #666; clear:both; text-align:left;}
+        .item1,.item2,.item3,.item4,.item5 {overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:8px;}
+        .item1 {width:50px;}
+        .item2 {width:100px;}
+        .item3 {width:80px;}
+        .item4 {width:200px; margin-right:10px;} 
+        .item5 {width:200px;}
+        .item6 {width:100px;}
+
+    </style>
+</head>
+
+<body>
+    <div id="nav">
+      <ul>
+        <li>首页</li>
+        <li>显示查询</li>
+        <li>配置信息</li>
+        <li>退出</li>
+      </ul>
+    </div>
+    <div id="main">
+        <div id="main_left">
+            <div class='title'>栏目</div>
+            <div id="main_left_content"></div>
+        </div>
+        <div id="main_right">
+            <div class='title'>内容展示</div>
+            <div id="main_right_title">
+                <ul>
+                  <li class="item1">序号</li>
+                  <li class="item2">处理时间</li>
+                  <li class="item3">相似度值</li>
+                  <li class="item4">URL链接</li>
+                  <li class="item5">URL标题</li>
+                </ul>
+            </div>
+            <div id="main_right_content"></div> 
+        </div>
+    </div> <!-- end #main -->
+
+
+    <div id="manage">
+
+    </div>
+
+
+
+
+</body>
+
+<script type="text/javascript" charset="utf-8">
+    mydata = {'names':['google','facebook'], 'data':[[['1','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['2','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['3','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品']], [['1','3/11 11:10:11','0.3111','http://www.facebook/aadld/html','Facebook年报']]]};
+
+
+    function clear_div (id) {
+        $(id).empty();
+    }
+
+    function clear_cate() {
+        clear_div('#main_left_content');
+    }
+
+    function clear_value() {
+        clear_div('#main_right_content');
+    }
+
+    function load_cate (names) {
+        var div = $('#main_left_content');
+        $.each (names, function (index, value) {
+                $('<li onclick=load_content(' + index + '); >' + value + '</li>').appendTo(div);
+                });
+    }
+
+    
+    function load_content (id) {
+        clear_value();
+        var contents = mydata.data[id];
+        var div = $('#main_right_content');
+        $.each (contents, function (index, value) {
+                var ul = $('<ul/>');
+                for (var i=0;i<value.length;i++) {
+                    $('<li/>').text(value[i]).addClass('item'+(1+i)).appendTo(ul);
+                }
+                div.append(ul);
+                });
+    }
+
+    function load_data(data) {
+        load_cate(data);
+    }
+
+    function get_data () {
+        var url = '/';
+        $.get(url,{}, load_data);
+    }
+
+    $(document).ready( function () { load_data(mydata.names); $('#main').hide(); });
+
+</script>
+</html>

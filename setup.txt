@@ -1,0 +1,8 @@
+
+
+1 web.py 
+    git clone git://github.com/webpy/webpy.git 
+    cd webpy
+    python setup.py install
+    vim   code.py
+    python code.py  [80]

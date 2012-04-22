@@ -8,9 +8,12 @@
         html,body {padding:0px; margin:0px;}
         body {width:920px; margin:0 auto; }
         ul,li,div {padding:0px; margin:0px ; list-style:none;}
-        div#nav  {clear:both; width:100%; height:30px; background:#25262A; color:#BEBEC0; margin-top:10px; padding-top:3px;}
+
+        div#nav {clear:both; width:100%; height:30px; background:#25262A; color:#BEBEC0; margin-top:10px; padding-top:3px;}
         div#nav ul {padding:0px; margin:0px; list-style:none;}
-        div#nav ul li {float:left; list-style:none;  margin:6px 10px; font-size:13px;}
+        div#nav ul li {float:left; list-style:none;  margin:6px 10px; font-size:13px; cursor:pointer;}
+        div#nav ul li:hover {background:#222; color:white;}
+
         div#main {margin:10px 0px;height:500px; width:100%; }
         div#main_left,div#main_right {float:left; scroll:auto; height:500px;}
         div#main_left {width:200px; border:1px solid #666; }
@@ -27,8 +30,8 @@
         div#main_right_content ul {height:22px; margin:3px 0px 10px 5px; border-bottom:1px dashed #e5e5e5;}
         div#main_right_content ul li {float:left;}
 
-        div#manage {text-align:left; font-size:14px; border:1px solid #eee; height:500px; scroll:auto;}
-        div#manage_add {width:90px; height:21px; background: red; color:white; padding:6px; border-radius:10px; display:block; float:right; text-align:center;}
+        div#manage {text-align:left; font-size:14px; border:1px solid #eee; height:500px; scroll:auto; background:white; margin-top:10px;}
+        div#manage_add {width:90px; height:21px; background: red; color:white; padding:6px; border-radius:10px; display:block; float:right; text-align:center; cursor:pointer;}
         div#manage_add:hover {color:#eee; }
 
 
@@ -38,10 +41,17 @@
         div#manage ul {clear:both;}
         div#manage ul li {float:left; border-bottom:1px dashed #e5e5e5; margin-top:10px;}
 
-        div#edit_cate p {margin:20px 0px 1px 0px; padding:0px; font-size:14px;}
+        div#edit_cate {width:500px; height:400px; display:none; background-color:white; position:absolute; top:60px; left:200px; z-index:3; border:1px solid gray;}
+        div#edit_cate form {margin:10px; width:auto; height:auto;}
+        div#edit_cate p {margin:20px 0px 1px 0px; padding:0px; font-size:13px;} 
         div#edit_cate input {width:400px; height:30px; font-size:25px;}
         div#edit_cate textarea {width:400px; height:70px; scroll:auto; overflow-y:auto;}
 
+        div#del_cate {width:500px; height:170px; display:none; background-color:white; position:absolute; top:60px; left:200px; z-index:3; border:1px solid gray;}
+        div#edit_del p {font-size:14px; margin-left:10px;}
+
+
+        div#background {position:absolute; left:0px; top:0px; background-color:gray; display:none; z-index:2;}
 
         .title {color:black; display:block; background-color:#00FFFF; font-size:14px; height:23px; padding:5px 5px; font-weight:bold; border-bottom:1px solid #666; clear:both; text-align:left;}
         .item1,.item2,.item3,.item4,.item5 {overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:8px;}
@@ -60,7 +70,8 @@
         .ctem4 {width:40px; margin-left:20px;}
         .ctem5 {width:40px;}
 
-        .block {border:1px solid #eee; padding:8px 20px; background-color:#eee;}
+        .block {border:1px solid #eee; padding:8px 20px; margin-left:25px; background-color:#eee; cursor:pointer; font-size:13px;}
+        .block:hover {background-color:#e9e9e9; font-weight:bold; }
     </style>
 </head>
 
@@ -68,8 +79,8 @@
     <div id="nav">
       <ul>
         <li>首页</li>
-        <li>显示查询</li>
-        <li>配置信息</li>
+        <li onclick="$('#manage').hide();$('#main').show();">显示查询</li>
+        <li onclick="$('#main').hide();$('#manage').show();">配置信息</li>
         <li>退出</li>
       </ul>
     </div>
@@ -96,7 +107,7 @@
 
     <div id="manage">
         <div class="title">栏目管理</div>
-        <div id="manage_add">新建栏目</div>
+        <div id="manage_add" onclick="edit_cate(-1);">新建栏目</div>
         <div id="manage_head">
             <li class="ctem0">序号</li>
             <li class="ctem1">名称</li>
@@ -109,16 +120,26 @@
     </div>
 
     <div id="edit_cate">
+        <div class="title"></div>
         <form>
             <p>条目名称</p>
-            <input type="text" id="edit_cate_name" value="" />
+            <input type="hidden" value="">
+            <input type="text" value="" />
             <p>关键词列表</p>
             <textarea ></textarea>
             <p>网址来源列表</p>
             <textarea ></textarea>
-            <p><span class='block'>保存</span></p>
+            <p><span class='block'>保存</span><span class="block" onclick="hide_block('#edit_cate');">取消</span></p>
         </form>
     </div>
+
+    <div id="del_cate">
+      <div class="title">确定删除条目</div>
+      <p>真的要删除</p><br/>
+      <p><span class="block">删除</span> <span class="block" onclick="hide_block('#del_cate');">取消</span></p>
+    </div>
+
+    <div id="background"></div>   <!-- 背景,覆盖页面 -->
 
 
 
@@ -128,6 +149,9 @@
 <script type="text/javascript" charset="utf-8">
     mydata = {'names':['google','facebook'], 'data':[[['1','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['2','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['3','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品']], [['1','3/11 11:10:11','0.3111','http://www.facebook/aadld/html','Facebook年报']]], 'name_info': [['12','google','Google','http://www.google.com/xx.com;http://baidu.com/axx/aa.xml'],['12','facebook','Facebook;脸谱','http://www.facebook.com']]};
 
+    function mul_line (s) {
+        return s.replace(';', '\n');
+    }
 
     function clear_div (id) {
         $(id).empty();
@@ -148,7 +172,6 @@
                 });
     }
 
-    
     function load_content (id) {
         clear_value();
         var contents = mydata.data[id];
@@ -163,9 +186,40 @@
     }
 
     function edit_cate (id) {
+
+        if (id<0 || id>= mydata.name_info.length) {
+            var data = ['','','','',''];
+            var title= '添加条目';
+        }
+        else {
+            var data = mydata.name_info[id];
+            var title= '编辑条目';
+        }
+        $('#edit_cate div:first').text (title);
+        $('#edit_cate input:first').value = data[0];
+        $('#edit_cate input').get(1).value = data[1];
+        $('#edit_cate textarea:first').text (mul_line(data[2]));
+        $('#edit_cate textarea').get(1).value = (mul_line(data[3]));
+
+        display_block('#edit_cate');
     }
 
     function del_cate (id) {
+        display_block ('#del_cate');
+    }
+
+    function hide_block (id) {
+        $(id).hide();
+        $('#background').hide();
+    }
+
+    function display_block (id) {
+        var bg = $('#background');
+        bg.width  ( $(document).width());
+        bg.height ( $(document).height());
+        bg.show();
+        bg.fadeTo('fast',0.7);
+        $(id).show();
     }
 
     function load_manage (data) {

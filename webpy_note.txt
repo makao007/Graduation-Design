@@ -1,0 +1,27 @@
+webpy note
+
+//重定向
+'/(.*)/', 'redirect', 
+class redirect:
+    def GET(self, path):
+        web.seeother('/' + path)
+
+
+"/users/list/(.+)", "list_users"
+class list_users:
+    def GET(self, name):
+        #name=web.input()
+        return "Listing info about user: {0}".format(name)
+
+    def POST():
+        data = web.data()
+
+   def GET(self): 
+        referer = web.ctx.env.get('HTTP_REFERER', 'http://google.com')
+        raise web.seeother(referer)
+
+    web.header('Content-type', "text/html; charset=utf-8")
+    
+
+
+

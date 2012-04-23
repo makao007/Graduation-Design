@@ -1,0 +1,39 @@
+postgresql
+
+1. 安装postgresql , psycopg2  (下载exe文件）
+2.   psql -U postgres   //用postgres这个用户登录
+3
+
+create database test;
+create user <username> password 'this is password'
+
+drop database test;
+
+
+列出表名
+SELECT   tablename   FROM   pg_tables   
+WHERE   tablename   NOT   LIKE   'pg%'   
+AND tablename NOT LIKE 'sql_%' ;
+
+列出数据库名
+SELECT datname FROM pg_database;
+
+切换数据库 \c 数据库名
+数据库的信息 \l 
+
+select   *   from   pg_tables; 
+select   *   from   pg_database;
+
+类型：
+Date(y,m,d)
+Time(h,min,s)
+Timestamp(y,m,d,h,min,s)
+DateFromTicks(ticks)  //1970年之后的秒数？
+TimeFromTicks(ticks)
+TimestampFromTicks(ticks)
+Binary(string)
+STRING()
+BINARY()
+NUMBER()
+DATETIME()
+ROWID()

@@ -164,6 +164,30 @@ function login () {
     }
 }
 
+function add_cate () {
+    var add_cate = $('#edit_cate');
+    var id       = add_cate.find('input')[0].value.trim();
+    var title    = add_cate.find('input')[1].value.trim();
+    var keys     = add_cate.find('textarea')[0].value.trim();
+    var sources  =  encodeURIComponent(add_cate.find('textarea')[1].value.trim());
+    if (title.length==0) {
+        display_msg ("条目名称不能为空");
+        return ;
+    }
+    if (keys.length==0) {
+        display_msg ("关键词不能空");
+        return ;
+    }
+    if (sources.length==0) {
+        display_msg ("来源不能空");
+        return ;
+    }
+    
+    var parm = encode_url( {'id':id, 'title':title, 'keys':keys, 'sources':sources } );
+    var url  = server_url.add_cate + '?' + parm;
+    $.get (url, {} , function (data) {console.log(data);});
+}
+
 function add_user () {
     var input = $('#register input');
     var user  = input[0].value.trim();

@@ -13,10 +13,19 @@ urls = (
     '/login', 'login', 
     '/logout', 'logout',
     '/islogin', 'islogin',
+    '/add_cate','add_cate',
     )
 
 app = web.application (urls, locals())
 session = web.session.Session(app, web.session.DiskStore('sessions'), initializer={'is_login':False,'username':''})
+
+def response (flag, text) :
+    return """{"status":%s, "text":"%s" }""" % (flag, text)
+
+def to_login():
+    if not session.is_login:
+        raise web.seeother('/')
+
 
 class index:
     def GET(self):
@@ -37,9 +46,6 @@ class add_user:
             session.is_login = True
             session.username = user
             return 'add user successful'
-
-def response (flag, text) :
-    return """{"status":%s, "text":"%s" }""" % (flag, text)
 
 class login:
     def GET(self):
@@ -65,17 +71,28 @@ class islogin:
         else :
             return response(0, '')
 
+class logout:
+    def GET (self):
+        session.kill()
+        return 'logout'
+
+
 class mytest:
     def GET (self):
         user = web.input().get('id')
         session.count += 1
         return 'show session <a href=/show>show</a>'
 
+class add_cate:
+    def GET(self):
+        to_login()
+        input = web.input()
+        id    = input.get('id')
+        title = input.get('title')
+        keys  = input.get('keys')
+        src   = input.get('src')
+        return response(1,'add succ')
 
-class logout:
-    def GET (self):
-        session.kill()
-        return 'logout'
 
 if __name__ == "__main__":
     app.run()

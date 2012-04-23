@@ -16,7 +16,39 @@ xx 舆情监控系统 (web)
 3 完成索引方面(xapian)
 4 完成爬虫方面
 
+==========================================================
+约定：  只返回最新的内容（不保存历史内容)
 
+表设计及流程：
+xapian 表设计 : value[0] = weburls(id)
+
+表:
+
+条目    webfocus (id, userid,  title,  keywords, sources ) //条目，存放入口url及关键词
+url     weburls  (id, url , title,  nead_index=yes, indexed)            //url表
+content webcontents (id, urlid, content)                //存放url对应的内容
+
+download_url (id, url, url_md5, downloaded boolean， download_time, modify_time, deep )
+
+模块：  爬虫， 建立索引，  搜索
+爬虫：
+    定时执行
+    1. 读取  读取条目表中的sources 分析出url
+    2. 比较  将url与download_url表比较 （是否下载，下载时间)，如果下载时间对比现在少于阀值，跳到6
+    3. 下载  下载网页内容, 取得最后修改时间，如果之前已下载且最后修改时间一致,跳过6
+    4. 保存  将网页内容保存到数据库content表及weburls（need_index=yes)中
+    5. 分析  如果deep(深度） 大于等于阀值，跳到6; 否则 取出网页内容中所有的超链接, 添加到download_url表
+    6. 循环  从download_url中取出待爬虫的url, 跳到3 
+
+索引：
+    1 从weburls中中取出need_index=yes的记录，根据id从webcontents取出内容 
+    2 启动xapian进行索引
+    3 修改weburls的是否需要索引标记
+
+生成搜索结果：
+    1 从 webfocus取出关键词
+    2 向 xapian 进行搜索, 返回 weburls(id)
+    3 
 
     
 

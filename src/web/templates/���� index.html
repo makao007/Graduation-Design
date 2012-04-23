@@ -3,16 +3,17 @@
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <script src="/static/jquery.js"></script>
+    <script src="/static/main.js"></script>
     <script src="jquery.js"></script>
     <title>XX 相关搜索</title>
     <style type="text/css" media="screen">
         html,body {padding:0px; margin:0px;}
-        body {width:920px; margin:0 auto; }
+        body {width:920px; margin:0 auto; height:600px;}
         ul,li,div {padding:0px; margin:0px ; list-style:none;}
 
-        div#nav {clear:both; width:100%; height:30px; background:#25262A; color:#BEBEC0; margin-top:10px; padding-top:3px;}
-        div#nav ul {padding:0px; margin:0px; list-style:none;}
-        div#nav ul li {float:left; list-style:none;  margin:6px 10px; font-size:13px; cursor:pointer;}
+        div#nav {clear:both; width:100%; height:30px; background:lightblue; color:#333; margin-top:10px; }
+        div#nav ul {padding:0px; margin:0px; list-style:none; height:auto;}
+        div#nav ul li {float:left; list-style:none;  font-size:14px; cursor:pointer; height:24px; padding:5px 10px 0px 10px;}
         div#nav ul li:hover {background:#222; color:white;}
 
         div#main {margin:10px 0px;height:500px; width:100%; }
@@ -55,7 +56,19 @@
 
         div#background {position:absolute; left:0px; top:0px; background-color:gray; display:none; z-index:2;}
 
-        .title {color:black; display:block; background-color:#00FFFF; font-size:14px; height:23px; padding:5px 5px; font-weight:bold; border-bottom:1px solid #666; clear:both; text-align:left;}
+        div#login {width:250px; height:250px; border:1px solid #eee; float:right; margin-top:10px;}
+        div#login input {height:45px; width:200px; border:1px solid lightblue; margin:10px 15px; font-size:17px; padding:3px;}
+        div#login a {margin-left:20px; font-size:13px; text-decoration:none;}
+
+        div#register {width:450px; height:370px; border:1px solid #eee; display:none; z-index:3; background:white; position:absolute;}
+        div#register form {margin:0 auto; width:300px;}
+        div#register p {margin:15px 2px 0px 2px; padding:0px;}
+        div#register input {height:45px; width:200px; border:1px solid lightblue; font-size:17px; color:666; padding:3px;}
+        div#register input.button {width:80px; float:left; margin:10px 20px 2px 2px; }
+
+        div#message {position:absolute; top:0px; width:auto; height:auto;  background:#E8D098; z-index:4; left:200px; padding:3px 14px; display:none; font-size:14px;}
+
+        .title {color:black; display:block; background-color:#00FFFF; font-size:14px; height:23px; padding:5px 5px; font-weight:bold; border-bottom:1px solid #eee; clear:both; text-align:left;}
         .item1,.item2,.item3,.item4,.item5 {overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:8px;}
         .item1 {width:50px;}
         .item2 {width:100px;}
@@ -74,6 +87,8 @@
 
         .block {border:1px solid #eee; padding:8px 20px; margin-left:25px; background-color:#eee; cursor:pointer; font-size:13px;}
         .block:hover {background-color:#e9e9e9; font-weight:bold; }
+
+        input.button {background:#eee; border:0px; cursor:pointer;}
     </style>
 </head>
 
@@ -81,9 +96,9 @@
     <div id="nav">
       <ul>
         <li>首页</li>
-        <li onclick="$$('#manage').hide();$$('#main').show();">显示查询</li>
-        <li onclick="$$('#main').hide();$$('#manage').show();">配置信息</li>
-        <li>退出</li>
+        <li onclick="$$('#manage').hide(); $$('#login').hide(); $$('#main').show();">显示查询</li>
+        <li onclick="$$('#main').hide();$$('#login').hide(); $$('#manage').show();">配置信息</li>
+        <li onclick="logout();">退出</li>
       </ul>
     </div>
     <div id="main">
@@ -143,124 +158,35 @@
 
     <div id="background"></div>   <!-- 背景,覆盖页面 -->
 
+    <div id="login">  <!-- 用户登录窗口 -->
+      <form action="">
+          <input type="text" value="用户名" onclick="if (this.value=='用户名') this.value='';"/>
+          <input type="text" value="密码"   onclick="if (this.value=='密码'){this.value=''; this.type='password';}"/>
+        <input type="button" value="登录" class="button" onclick="login();"/>
+      </form>
+      <a href="javascript:void(0);" onclick="display_block('#register');">注册</a>
+    </div>   <!-- end login -->
 
+    <div id="register">
+        <div class="title">用户注册</div>
+      <form action="">
+        <p>用户名</p>
+        <input type="text" />
+        <p>密码</p>
+        <input type="password" />
+        <p>确认密码</p>
+        <input type="password" />
+        <input type="button" value="注册" class="button" onclick="add_user();"/>
+        <input type="button" value="取消" class="button" onclick="hide_block('#register');"/>
+      </form>
+    </div>
 
+    <div id="message" title="点击关闭本消息" onclick="$$('#message').slideUp('slow');"></div>
 
 </body>
+<script>
+mydata = {'names':['google','facebook'], 'data':[[['1','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['2','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['3','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['4','1/1 7:23:21','0.63','http://youtube.com','Youtube新电视']], [['1','3/11 11:10:11','0.3111','http://www.facebook/aadld/html','Facebook年报']]], 'name_info': [['12','google','Google','http://www.google.com/xx.com;http://baidu.com/axx/aa.xml'],['12','facebook','Facebook;脸谱','http://www.facebook.com']]};
 
-<script type="text/javascript" charset="utf-8">
-    mydata = {'names':['google','facebook'], 'data':[[['1','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['2','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['3','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['4','1/1 7:23:21','0.63','http://youtube.com','Youtube新电视']], [['1','3/11 11:10:11','0.3111','http://www.facebook/aadld/html','Facebook年报']]], 'name_info': [['12','google','Google','http://www.google.com/xx.com;http://baidu.com/axx/aa.xml'],['12','facebook','Facebook;脸谱','http://www.facebook.com']]};
-
-    function mul_line (s) {
-        return s.replace(';', '\n');
-    }
-
-    function clear_div (id) {
-        $$(id).empty();
-    }
-
-    function clear_cate() {
-        clear_div('#main_left_content');
-    }
-
-    function clear_value() {
-        clear_div('#main_right_content');
-    }
-
-    //左边栏目的显示
-    function load_cate (names) {
-        var div = $$('#main_left_content');
-        $$.each (names, function (index, value) {
-                $$('<li onclick=load_content(' + index + '); >' + value + '</li>').appendTo(div);
-                });
-    }
-
-    //查询的主要界面
-    function load_content (id) {
-        clear_value();
-        var contents = mydata.data[id];
-        var div = $$('#main_right_content');
-        $$.each (contents, function (index, value) {
-                var ul = $$('<ul/>');
-                for (var i=0;i<value.length;i++) {
-                    if (i==3) {
-                        $$('<li/>').html('<a target="_blank" href="' + value[i] + '">' + value[i] + '</a>').addClass('item'+(1+i)).appendTo(ul);
-                    }
-                    else {    
-                        $$('<li/>').text(value[i]).addClass('item'+(1+i)).appendTo(ul);
-                    }
-                }
-                div.append(ul);
-                });
-    }
-
-    function edit_cate (id) {
-
-        if (id<0 || id>= mydata.name_info.length) {
-            var data = ['','','','',''];
-            var title= '添加条目';
-        }
-        else {
-            var data = mydata.name_info[id];
-            var title= '编辑条目';
-        }
-        $$('#edit_cate div:first').text (title);
-        $$('#edit_cate input:first').value = data[0];
-        $$('#edit_cate input').get(1).value = data[1];
-        $$('#edit_cate textarea:first').text (mul_line(data[2]));
-        $$('#edit_cate textarea').get(1).value = (mul_line(data[3]));
-
-        display_block('#edit_cate');
-    }
-
-    function del_cate (id) {
-        display_block ('#del_cate');
-    }
-
-    function hide_block (id) {
-        $$(id).hide();
-        $$('#background').hide();
-    }
-
-    function display_block (id) {
-        var bg = $$('#background');
-        bg.width  ( $$(document).width());
-        bg.height ( $$(document).height());
-        bg.show();
-        bg.fadeTo('fast',0.7);
-        $$(id).show();
-    }
-
-    function load_manage (data) {
-        var div = $$("#manage_list");
-        $$.each (data, function (index, value ) {
-                var ul = $$("<ul/>");
-                $$('<li/>').text (index).addClass('ctem0').appendTo(ul);
-                $$('<li/>').text (value[1]).addClass('ctem1').appendTo(ul);
-                $$('<li/>').text (value[2]).addClass('ctem2').appendTo(ul);
-                $$('<li/>').text (value[3]).addClass('ctem3').appendTo(ul);
-                $$('<li/>').html('<a href="javascript:void(0);" onclick="edit_cate(' + index + ')">编辑</a>').addClass('ctem4').appendTo(ul);
-                $$('<li/>').html('<a href="javascript:void(0);" onclick="del_cate(' + index + ')">删除</a>').addClass('ctem5').appendTo(ul);
-
-                div.append (ul);
-                });
-    }
-
-    function load_data(data) {
-        load_cate(data);
-    }
-
-    function get_data () {
-        var url = '/';
-        $$.get(url,{}, load_data);
-    }
-
-    $$(document).ready( function () { 
-        load_data(mydata.names); 
-        $$('#main').hide(); 
-        $$('#manage').hide();
-        load_manage(mydata.name_info);
-        });
 
 </script>
 </html>

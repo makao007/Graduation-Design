@@ -32,6 +32,7 @@ download_url (id, url, url_md5, downloaded boolean， download_time, modify_time,
 
 模块：  爬虫， 建立索引，  搜索
 爬虫：
+    scrapy:   easy_install -U Scrapy
     定时执行
     1. 读取  读取条目表中的sources 分析出url
     2. 比较  将url与download_url表比较 （是否下载，下载时间)，如果下载时间对比现在少于阀值，跳到6
@@ -50,5 +51,4 @@ download_url (id, url, url_md5, downloaded boolean， download_time, modify_time,
     2 向 xapian 进行搜索, 返回 weburls(id)
     3 
 
-    
-
+ 

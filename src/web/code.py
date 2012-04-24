@@ -1,7 +1,7 @@
 import web
 import hashlib
 
-web.config.debug = False
+#web.config.debug = False
 web.config.session_parameters['timeout'] = 3600
 
 db = web.database(dbn='postgres', user='webpy', pw='1234', db='webpy')
@@ -17,7 +17,13 @@ urls = (
     )
 
 app = web.application (urls, locals())
-session = web.session.Session(app, web.session.DiskStore('sessions'), initializer={'is_login':False,'username':''})
+if web.config.get('_session') is None:
+    session = web.session.Session(app, web.session.DiskStore('sessions'), initializer={'is_login': False, 'username':''})
+    web.config._session = session
+else:
+    session = web.config._session
+
+#session = web.session.Session(app, web.session.DiskStore('sessions'), initializer={'is_login':False,'username':''})
 
 def response (flag, text) :
     return """{"status":%s, "text":"%s" }""" % (flag, text)

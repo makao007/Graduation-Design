@@ -10,17 +10,10 @@ import urlparse
 
 class Scrapy:
     # source url, max deep, match url
-    def __init__ (self, url='http://news.baidu.com/', match_url='', max_deep=2,max_page=1000000):
+    def __init__ (self, url='http://news.baidu.com/', max_deep=2, match_url=''):
         self.src_url = url
-        self.pre_url = ''
         self.cur_url = url
-
-        self.cur_deep= 1
         self.max_deep= max_deep
-
-        self.cur_page= 1
-        self.max_page= max_page
-
         self.mat_url = match_url
         self.content = ''
         self.unvisit = []
@@ -30,9 +23,6 @@ class Scrapy:
 
         self.begin_time = ''
         self.ends_time  = ''
-
-        self.stop_flag  = False
-        self.last_deep_url = ''
 
         self.unvisit.append (url)
         self.unvisit_hash.append (self._md5(url))
@@ -50,11 +40,6 @@ class Scrapy:
                 self.content = ''
 
     def _findurls (self):
-        if self.stop_flag :
-            return []
-        if self.cur_deep > self.max_deep:
-            return []
-
         urls = re.findall (r"""<a .*?href\s*=\s*(["']?)(.*?)\1.*?>""", self.content, re.I|re.S|re.M)
         result = []
         for i in urls:
@@ -68,26 +53,7 @@ class Scrapy:
             if self._match_url (tmp): 
                 result.append(tmp)
 
-
-        result = list(set(result))
-        if len(result)==0:
-            self.last_deep_url = self.pre_url
-            self.cur_deep += 1
-        elif self.cur_deep==1:
-            self.last_deep_url = result[-1]
-            self.cur_deep += 1
-        elif self.cur_url == self.last_deep_url:
-            self.last_deep_url = result[-1]
-            self.cur_deep += 1
-            
-
-        if self.cur_page+len(result) > self.max_page:
-            self.cur_page = self.max_page
-            self.stop_flag = True
-            return result[:self.max_page-self.cur_page]
-        else:
-            self.cur_page += len(result)
-            return result
+        return list(set(result))
 
     def _match_url (self, url):
         if (url.startswith(self.src_url)):
@@ -128,13 +94,13 @@ class Scrapy:
         self.begin_time = datetime.datetime.now()
         while self.unvisit:
             self.unvisit_hash.pop(0)
-            self.pre_url = self.cur_url
             self.cur_url = self.unvisit.pop(0)
+            print self.cur_url, 
+            print 'total unvisit url : ' , len (self.unvisit)
             self._fetch()
             self._checkin (self._findurls())
             self.visited.append(self.cur_url)
             self.visited_hash.append (self._md5(self.cur_url))
-            print self.cur_url,len(self.unvisit), self.cur_page 
         return self._response ()
 
 """

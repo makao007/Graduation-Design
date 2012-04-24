@@ -137,13 +137,32 @@ class Scrapy:
             print self.cur_url,len(self.unvisit), self.cur_page 
         return self._response ()
 
-"""
 class Analyze:
-    def get_content (self, content):
-        temp = re.search ("<\s*title.*?>(.*?)</title>", content, re.I|re.M|re.S)
-        if temp :
-            title = temp.group(0)
-        else:
-            title = ''
+    def __init__ (self, content, created, last_modify):
+        self.title   = ''
+        self.content = content
+        self.body_text= ''
+        self.description = ''
+        self.last_modify = last_modify
+        self.created     = created
 
-"""
+    def get_title (self):
+        temp = re.search (r"""<\s*title.*?>(.*?)</title>""", self.content, re.I|re.M|re.S)
+        if temp :
+            self.title = temp.group(1)
+
+    def get_desc (self):
+        temp = re.search (r"""<meta.*?name\s*=\s*["']?description["']?.*?content\s*=\s*["']?(.*?)["']?\s*>""", s, re.I|re.M|re.S)
+        if temp:
+            self.description = temp.group(1)
+        
+    def get_body_text (self):
+        ss = self.content.replace('\n','').replace('\r','')
+        ss = re.sub("\s{3,},", "  ", ss)
+        t = re.compile (r"<style.*?></style>",re.I|re.S|re.M)
+        ss = t.sub("",ss)
+        t = re.compile (r"<script.*?</style>",re.I|re.M|re.S)
+        ss = t.sub("",ss)
+        t = re.compile (r"<.+?>",re.I|re.M|re.S)
+        ss = t.sub('',ss)
+        self.body_text = ss

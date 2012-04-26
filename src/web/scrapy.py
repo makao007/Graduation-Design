@@ -166,3 +166,16 @@ class Analyze:
         t = re.compile (r"<.+?>",re.I|re.M|re.S)
         ss = t.sub('',ss)
         self.body_text = ss
+
+
+
+
+class save_content ():
+    def __init__ (self, url, title, desc, last_modify, download_time):
+        self.url = url
+        self.desc = desc
+        self.title = title
+        self.last_modify = last_modify
+        self.download_time = download_time
+
+        

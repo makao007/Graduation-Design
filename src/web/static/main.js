@@ -140,8 +140,8 @@ function logout () {
 
 function login () {
     var input = $('#login input');
-    var user  = input[0].value.trim();
-    var pawd  = input[1].value.trim();
+    var user  = input[0].value;
+    var pawd  = input[1].value;
     if (user=='用户名' || pawd=='密码') {
         display_msg ('用户名和密码不能为空');
         return;
@@ -150,7 +150,6 @@ function login () {
         var parm = encode_url ({'username':user, 'password': pawd});
         var url  = server_url.login + '?' + parm;
         $.get (url, {}, function (data) {
-            console.log (data);
             var tmp = $.parseJSON(data);
             if (tmp.status == 0) {
                 display_msg (tmp.text);
@@ -166,10 +165,10 @@ function login () {
 
 function add_cate () {
     var add_cate = $('#edit_cate');
-    var id       = add_cate.find('input')[0].value.trim();
-    var title    = add_cate.find('input')[1].value.trim();
-    var keys     = add_cate.find('textarea')[0].value.trim();
-    var sources  =  encodeURIComponent(add_cate.find('textarea')[1].value.trim());
+    var id       = add_cate.find('input')[0].value;
+    var title    = add_cate.find('input')[1].value;
+    var keys     = encodeURIComponent(add_cate.find('textarea')[0].value);
+    var sources  = encodeURIComponent(add_cate.find('textarea')[1].value);
     if (title.length==0) {
         display_msg ("条目名称不能为空");
         return ;
@@ -185,14 +184,14 @@ function add_cate () {
     
     var parm = encode_url( {'id':id, 'title':title, 'keys':keys, 'sources':sources } );
     var url  = server_url.add_cate + '?' + parm;
-    $.get (url, {} , function (data) {console.log(data);});
+    $.get (url, {} , function (data) {});
 }
 
 function add_user () {
     var input = $('#register input');
-    var user  = input[0].value.trim();
-    var pawd1 = input[1].value.trim();
-    var pawd2 = input[2].value.trim();
+    var user  = input[0].value;
+    var pawd1 = input[1].value;
+    var pawd2 = input[2].value;
     if (user.length == 0) {
         display_msg ('用户名不能为空');
         return ;
@@ -214,7 +213,7 @@ function encode_url (d) {
     var i;
     var result = '';
     for (i in d) {
-        result = result + i.trim() + '=' + d[i] + '&';
+        result = result + i + '=' + d[i] + '&';
     }
     if (result.length > 0)
         result = result.substr(0, result.length-1);

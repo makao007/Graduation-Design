@@ -232,11 +232,5 @@ function islogin() {
     });
 }
 
-$(document).ready( function () { 
-    load_data(mydata.names); 
-    $('#main').hide(); 
-    $('#manage').hide();
-    load_manage(mydata.name_info);
-    islogin();
-    });
+
 

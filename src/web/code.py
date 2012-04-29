@@ -96,7 +96,11 @@ class logout:
 
 class mytest:
     def GET (self):
-        return session.user_id
+        result = db.select ("webfocus")
+        data   = [i.title for i in result]
+        title  = {'title': data}
+        return json.dumps ({'title':result})
+        #return session.user_id
 
 class del_cate:
     def GET (self):
@@ -157,8 +161,9 @@ class add_cate:
 
 class categorys:
     def GET (self):
-        to_login()
-        user_id = session.user_id
+        #to_login()
+        #user_id = session.user_id
+        user_id = 1
         
         tmp1 = dict (userid=user_id)
         category = db.select ('webfocus', tmp1, where="userid=$userid",order="created DESC")
@@ -193,7 +198,11 @@ class categorys:
             ss3.append ( [k.id, k.title, ss1[k.id], ss2[k.id]] )
             names.append (k.title)
 
-        return {'names': names, 'name_info': ss3 }
+
+        #web.header('Content-type', 'application/json')
+        web.header('Content-type','text/javascript')
+        data = json.dumps({'names':names, 'name_info': ss3})
+        return web.input().get('callback') + '(' + data + ');'
 
 if __name__ == "__main__":
     app.run()

@@ -186,9 +186,20 @@
 
 </body>
 <script>
-mydata = {'names':['google','facebook'], 'data':[[['1','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['2','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['3','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['4','1/1 7:23:21','0.63','http://youtube.com','Youtube新电视']], [['1','3/11 11:10:11','0.3111','http://www.facebook/aadld/html','Facebook年报']]], 'name_info': [['12','google','Google','http://www.google.com/xx.com;http://baidu.com/axx/aa.xml'],['12','facebook','Facebook;脸谱','http://www.facebook.com']]};
+//mydata = {'names':['google','facebook'], 'data':[[['1','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['2','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['3','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['4','1/1 7:23:21','0.63','http://youtube.com','Youtube新电视']], [['1','3/11 11:10:11','0.3111','http://www.facebook/aadld/html','Facebook年报']]], 'name_info': [['12','google','Google','http://www.google.com/xx.com;http://baidu.com/axx/aa.xml'],['12','facebook','Facebook;脸谱','http://www.facebook.com']]};
 
-mydata = {'name_info': [[20, u'title2', u'http://www.baidu.com\nhttp://csdn.net\nhttp://javaeye.com\n', u'facebook\ngoogle\namazon\n'], [19, u'aaa', u'http://aaaaa\n', u'aaaaa\n']], 'names': [u'title2', u'aaa']};
+var mydata ;
+
+jQuery(document).ready(function(){ 
+    jQuery('#main').hide(); 
+    jQuery('#manage').hide();
+    islogin();
+    jQuery.getJSON('categorys?callback=?',function (data) {
+        mydata = data;
+        load_data(data.names); 
+        load_manage(data.name_info);
+    });
+});
 
 </script>
 </html>

@@ -1,4 +1,5 @@
 import web
+import json
 import hashlib
 
 #web.config.debug = False
@@ -16,6 +17,7 @@ urls = (
     '/add_cate','add_cate',
     '/del_cate','del_cate',
     '/categorys', 'categorys',
+    '/favicon.ico', 'favicon',
     )
 
 app = web.application (urls, locals())
@@ -50,17 +52,17 @@ class index:
 class add_user:
     def GET(self):
         info = web.input()
-        user = str(info.get('user'))
-        pawd = str(info.get('pawd1'))
+        user = str(info.get('user')).strip()
+        pawd = str(info.get('pawd1')).strip()
         pawd = hashlib.md5(pawd).hexdigest()
         temp = dict(name=user)
         if len(db.select ('webuser', temp,where="username=$name", limit=1))>0:
-            return 'user exists'
+            return response(0,'user exists')
         else:
             db.insert ('webuser',username=user, password=pawd)
             session.is_login = True
             session.username = user
-            return 'add user successful'
+            return response(1,'add user successful')
 
 class login:
     def GET(self):
@@ -105,7 +107,7 @@ class mytest:
 class del_cate:
     def GET (self):
         to_login()
-        id = input.get ('id')
+        id = web.input().get ('id')
         if id:
             if not check_user_cate (session.user_id, id):
                 return response(0, 'current user not have this category')
@@ -120,10 +122,10 @@ class add_cate:
     def GET (self):
         to_login()
         input = web.input()
-        id    = input.get('id')
-        title = input.get('title')
-        keys  = input.get('keys').replace(';','\n').replace('\n\n','\n').split('\n')
-        srcs  = input.get('sources').replace(';','\n').replace('\n\n','\n').split('\n')
+        id    = input.get('id').strip()
+        title = input.get('title').strip()
+        keys  = input.get('keys').strip().replace(';','\n').replace('\n\n','\n').split('\n')
+        srcs  = input.get('sources').strip().replace(';','\n').replace('\n\n','\n').split('\n')
         
 
         if not id:
@@ -161,9 +163,8 @@ class add_cate:
 
 class categorys:
     def GET (self):
-        #to_login()
-        #user_id = session.user_id
-        user_id = 1
+        to_login()
+        user_id = session.user_id
         
         tmp1 = dict (userid=user_id)
         category = db.select ('webfocus', tmp1, where="userid=$userid",order="created DESC")
@@ -202,7 +203,15 @@ class categorys:
         #web.header('Content-type', 'application/json')
         web.header('Content-type','text/javascript')
         data = json.dumps({'names':names, 'name_info': ss3})
+
+        #jsonp
         return web.input().get('callback') + '(' + data + ');'
+
+class favicon:
+    def GET (self):
+        web.redirect ('/static/favicon.ico')
+        #raise web.seeother('/static/favicon.ico')
+    
 
 if __name__ == "__main__":
     app.run()

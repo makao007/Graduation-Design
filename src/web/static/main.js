@@ -26,8 +26,19 @@ function clear_value() {
     clear_div('#main_right_content');
 }
 
+function clear_input () {
+    $('#edit_cate input').val('');
+    $('#edit_cate textarea').val('');
+}
+
+function clear_cate_list () {
+    clear_div('#manage_list');
+}
+
 //左边栏目的显示
 function load_cate (names) {
+    clear_cate();
+    clear_cate_list();
     var div = $('#main_left_content');
     $.each (names, function (index, value) {
             $('<li onclick=load_content(' + index + '); >' + value + '</li>').appendTo(div);
@@ -59,16 +70,17 @@ function edit_cate (id) {
     if (id<0 || id>= mydata.name_info.length) {
         var data = ['','','','',''];
         var title= '添加条目';
+        clear_input();
     }
     else {
         var data = mydata.name_info[id];
         var title= '编辑条目';
     }
     $('#edit_cate div:first').text (title);
-    $('#edit_cate input:first').value = data[0];
+    $('#edit_cate input:first').val(data[0]);
     $('#edit_cate input').get(1).value = data[1];
-    $('#edit_cate textarea:first').text (mul_line(data[2]));
-    $('#edit_cate textarea').get(1).value = (mul_line(data[3]));
+    $('#edit_cate textarea:first').text (mul_line(data[3]));
+    $('#edit_cate textarea').get(1).value = (mul_line(data[2]));
 
     display_block('#edit_cate');
 }
@@ -76,6 +88,18 @@ function edit_cate (id) {
 //删除一条目
 function del_cate (id) {
     display_block ('#del_cate');
+    $('#del_cate span:first').click( function () {
+        $.get(server_url.del_cate+'?id='+id,{}, function (data) {
+            hide_block('#del_cate');
+            var tmp = $.parseJSON(data);
+            if (tmp.status) {
+                display_msg ("删除成功");
+                reload_data();
+            } else {
+                display_msg (tmp.text);
+            }
+        });
+    });
 }
 
 //还原，隐藏半透明
@@ -117,7 +141,7 @@ function load_manage (data) {
             $('<li/>').text (value[2]).addClass('ctem2').appendTo(ul);
             $('<li/>').text (value[3]).addClass('ctem3').appendTo(ul);
             $('<li/>').html('<a href="javascript:void(0);" onclick="edit_cate(' + index + ')">编辑</a>').addClass('ctem4').appendTo(ul);
-            $('<li/>').html('<a href="javascript:void(0);" onclick="del_cate(' + index + ')">删除</a>').addClass('ctem5').appendTo(ul);
+            $('<li/>').html('<a href="javascript:void(0);" onclick="del_cate(' + value[0] + ')">删除</a>').addClass('ctem5').appendTo(ul);
 
             div.append (ul);
             });
@@ -155,7 +179,9 @@ function login () {
                 display_msg (tmp.text);
             } else {
                 $('#nav ul li:first').html('您好：' + tmp.text);
+                $('#nav ul li:first').attr('onclick','');
                 $('#login').hide();
+                get_category_info();
             }
         });
     } else {
@@ -184,7 +210,16 @@ function add_cate () {
     
     var parm = encode_url( {'id':id, 'title':title, 'keys':keys, 'sources':sources } );
     var url  = server_url.add_cate + '?' + parm;
-    $.get (url, {} , function (data) {});
+    $.get (url, {} , function (data) {
+        var tmp = $.parseJSON(data); 
+        if (tmp.status==0) {
+            display_msg ("操作出错   " + tmp.text );
+        } else {
+            hide_block('#edit_cate'); 
+            display_msg("操作成功   " + tmp.text );
+            reload_data();
+        }
+    });
 }
 
 function add_user () {
@@ -220,12 +255,32 @@ function encode_url (d) {
     return result;
 }
 
+function reload_data () {
+    mydata = {'names':[], 'name_info':[]};
+    reflash_data ();
+    get_category_info();
+}
+
+function reflash_data () {
+    load_data(mydata.names); 
+    load_manage(mydata.name_info);
+}
+
+
+function get_category_info () {
+    jQuery.getJSON('categorys?callback=?',function (data) {
+        mydata = data;
+        reflash_data();
+    });
+}
+
 function islogin() {
     $.get(server_url.islogin,{}, function (data) {
         var tmp = $.parseJSON(data);
         if (tmp.status == 1) {
             $('#login').hide();
             $('#nav ul li:first').html('您好：' + tmp.text);
+            get_category_info();
         } else {
             $('#nav ul li:first').html('首页');
         }

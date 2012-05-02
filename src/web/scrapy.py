@@ -7,10 +7,9 @@ import urllib,urllib2
 import hashlib
 import urlparse
 
-
 class Scrapy:
     # source url, max deep, match url
-    def __init__ (self, url='http://news.baidu.com/', match_url='', max_deep=2,max_page=1000000):
+    def __init__ (self, url,save_func, match_url='', max_deep=2,max_page=1000):
         self.src_url = url
         self.pre_url = ''
         self.cur_url = url
@@ -33,21 +32,30 @@ class Scrapy:
 
         self.stop_flag  = False
         self.last_deep_url = ''
+    
+        self.save_func  = save_func
 
-        self.unvisit.append (url)
-        self.unvisit_hash.append (self._md5(url))
+        self.join_queue ([url])
     
     def _md5 (self, p):
         return hashlib.md5(p).hexdigest()
 
     def _fetch (self):
+        last_modify = ''
         try:
-            self.content = urllib.urlopen(self.cur_url).read()
+            temp = urllib.urlopen(self.cur_url)
+            last_modify = temp.headers.get('last-modified','')
+            self.content = temp.read()
         except:
             try:
-                self.content = urllib.urlopen(self.cur_url).read()
+                temp = urllib.urlopen(self.cur_url)
+                last_modify = temp.headers.get('last-modified','')
+                self.content = temp.read()
             except:
                 self.content = ''
+
+        ana = Analyze(self.cur_url, self.content,datetime.datetime.now(), last_modify, self.save_func)
+        ana.save_record()
 
     def _findurls (self):
         if self.stop_flag :
@@ -124,12 +132,21 @@ class Scrapy:
                 'visited_hash': self.visited_hash, 'unvisit_url': self.unvisit,
                 'unvisit_hash': self.unvisit_hash }
 
+    def join_queue (self, urls):
+        for url in urls:
+            if self._checkin_url (self._md5(url)):
+                self.unvisit.append (url)
+                self.unvisit_hash.append (self._md5(url))
+
+
     def start_scrapy (self):
         self.begin_time = datetime.datetime.now()
         while self.unvisit:
             self.unvisit_hash.pop(0)
             self.pre_url = self.cur_url
-            self.cur_url = self.unvisit.pop(0)
+            self.cur_url = self.unvisit.pop(0).strip()
+            if not self.cur_url:
+                continue
             self._fetch()
             self._checkin (self._findurls())
             self.visited.append(self.cur_url)
@@ -138,7 +155,8 @@ class Scrapy:
         return self._response ()
 
 class Analyze:
-    def __init__ (self, content, created, last_modify):
+    def __init__ (self, url, content, created, last_modify, save_data):
+        self.url     = url
         self.title   = ''
         self.content = content
         self.body_text= ''
@@ -146,17 +164,24 @@ class Analyze:
         self.last_modify = last_modify
         self.created     = created
 
-    def get_title (self):
+        self._get_title()
+        self._get_desc ()
+        self._get_body_text()
+
+        self.save_data = save_data
+
+
+    def _get_title (self):
         temp = re.search (r"""<\s*title.*?>(.*?)</title>""", self.content, re.I|re.M|re.S)
         if temp :
             self.title = temp.group(1)
 
-    def get_desc (self):
-        temp = re.search (r"""<meta.*?name\s*=\s*["']?description["']?.*?content\s*=\s*["']?(.*?)["']?\s*>""", s, re.I|re.M|re.S)
+    def _get_desc (self):
+        temp = re.search (r"""<meta.*?name\s*=\s*["']?description["']?.*?content\s*=\s*["']?(.*?)["']?\s*>""", self.content, re.I|re.M|re.S)
         if temp:
             self.description = temp.group(1)
         
-    def get_body_text (self):
+    def _get_body_text (self):
         ss = self.content.replace('\n','').replace('\r','')
         ss = re.sub("\s{3,},", "  ", ss)
         t = re.compile (r"<style.*?></style>",re.I|re.S|re.M)
@@ -167,15 +192,6 @@ class Analyze:
         ss = t.sub('',ss)
         self.body_text = ss
 
+    def save_record(self):
+        self.save_data (self.url, self.title, self.description, self.body_text, self.created, self.last_modify)
 
-
-
-class save_content ():
-    def __init__ (self, url, title, desc, last_modify, download_time):
-        self.url = url
-        self.desc = desc
-        self.title = title
-        self.last_modify = last_modify
-        self.download_time = download_time
-
-        

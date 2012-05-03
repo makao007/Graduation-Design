@@ -17,6 +17,7 @@ urls = (
     '/add_cate','add_cate',
     '/del_cate','del_cate',
     '/categorys', 'categorys',
+    '/relative',  'relative',
     '/favicon.ico', 'favicon',
     )
 
@@ -206,6 +207,23 @@ class categorys:
 
         #jsonp
         return web.input().get('callback') + '(' + data + ');'
+
+class relative:
+    def GET (self):
+        to_login()
+        user_id = session.user_id
+
+        sql = "select webfocus.id as fid,websource.url as url from webfocus,websource where webfocus.userid=$userid and webfocus.id = websource.focus_id";
+
+        sql = "select weburls.* from weburls, webfocus, websource, webkeywords where webfocus.userid=$userid and and webfocus.id=webkeywords.focus.id and websource.focus_id = webfocus.id and weburls.url=websource.url and weburls.title like webkeywords.word "
+        source = db.query(sql, vars={'userid':user_id})
+
+        sql = "select webfocus.id as id,webkeywords.word as word from webfocus,webkeywords where webfocus.userid=$userid and webfocus.id = webkeywords.focus_id"
+        keyword = db.query(sql, vars={'userid':user_id})
+
+        step = '\n'
+
+        return 
 
 class favicon:
     def GET (self):

@@ -13,7 +13,6 @@ cur  = conn.cursor()
 
 def pagesave (url, title, desc, text, download_time, last_modify ):
     global cur
-    print url,title, desc, download_time, last_modify
     cur.execute ("insert into weburls(url, title, description, content, download_time, last_modify) values (%s,%s,%s,%s,%s,%s) ", (url, title, desc, text, download_time, last_modify))
 
 
@@ -24,7 +23,7 @@ def get_all_url ():
     return [url[0] for url in result]
 
 #url, save_func, match_url, max_deep, max_page
-scr = scrapy.Scrapy('', pagesave)
+scr = scrapy.Scrapy('', pagesave,'',2,100)
 scr.join_queue(get_all_url())
 scr.start_scrapy()
 

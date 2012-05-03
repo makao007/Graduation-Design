@@ -42,17 +42,20 @@ class Scrapy:
 
     def _fetch (self):
         last_modify = ''
+        print 'downloading %s ...' % self.cur_url
         try:
-            temp = urllib.urlopen(self.cur_url)
-            last_modify = temp.headers.get('last-modified','')
-            self.content = temp.read()
+            #temp = urllib.urlopen(self.cur_url)
+            #last_modify = temp.headers.get('last-modified','')
+            #self.content = temp.read()
+
+            request =urllib2.Request(self.cur_url)
+            request.add_header('User-Agent','Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.162 Safari/535.19')
+            response =urllib2.urlopen(request)
+            last_modify  = response.headers.get('last-modified','')
+            self.content = response.read()
         except:
-            try:
-                temp = urllib.urlopen(self.cur_url)
-                last_modify = temp.headers.get('last-modified','')
-                self.content = temp.read()
-            except:
-                self.content = ''
+            self.content = ''
+            print 'download %s error ' % self.cur_url
 
         ana = Analyze(self.cur_url, self.content,datetime.datetime.now(), last_modify, self.save_func)
         ana.save_record()
@@ -90,9 +93,10 @@ class Scrapy:
             
 
         if self.cur_page+len(result) > self.max_page:
+            tmp = self.cur_page
             self.cur_page = self.max_page
             self.stop_flag = True
-            return result[:self.max_page-self.cur_page]
+            return result[:self.max_page-tmp]
         else:
             self.cur_page += len(result)
             return result
@@ -143,15 +147,15 @@ class Scrapy:
         self.begin_time = datetime.datetime.now()
         while self.unvisit:
             self.unvisit_hash.pop(0)
-            self.pre_url = self.cur_url
             self.cur_url = self.unvisit.pop(0).strip()
+            self.pre_url = self.cur_url
             if not self.cur_url:
                 continue
             self._fetch()
             self._checkin (self._findurls())
             self.visited.append(self.cur_url)
             self.visited_hash.append (self._md5(self.cur_url))
-            print self.cur_url,len(self.unvisit), self.cur_page 
+
         return self._response ()
 
 class Analyze:
@@ -184,12 +188,16 @@ class Analyze:
     def _get_body_text (self):
         ss = self.content.replace('\n','').replace('\r','')
         ss = re.sub("\s{3,},", "  ", ss)
-        t = re.compile (r"<style.*?></style>",re.I|re.S|re.M)
+
+        t = re.compile (r"<style.*?</style>",re.I|re.S|re.M)
         ss = t.sub("",ss)
+
         t = re.compile (r"<script.*?</style>",re.I|re.M|re.S)
         ss = t.sub("",ss)
+
         t = re.compile (r"<.+?>",re.I|re.M|re.S)
         ss = t.sub('',ss)
+
         self.body_text = ss
 
     def save_record(self):

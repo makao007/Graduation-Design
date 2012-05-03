@@ -138,8 +138,8 @@ function load_manage (data) {
             var ul = $("<ul/>");
             $('<li/>').text (index).addClass('ctem0').appendTo(ul);
             $('<li/>').text (value[1]).addClass('ctem1').appendTo(ul);
-            $('<li/>').text (value[2]).addClass('ctem2').appendTo(ul);
-            $('<li/>').text (value[3]).addClass('ctem3').appendTo(ul);
+            $('<li/>').text (value[3]).addClass('ctem2').appendTo(ul);
+            $('<li/>').text (value[2]).addClass('ctem3').appendTo(ul);
             $('<li/>').html('<a href="javascript:void(0);" onclick="edit_cate(' + index + ')">编辑</a>').addClass('ctem4').appendTo(ul);
             $('<li/>').html('<a href="javascript:void(0);" onclick="del_cate(' + value[0] + ')">删除</a>').addClass('ctem5').appendTo(ul);
 

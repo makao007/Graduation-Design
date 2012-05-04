@@ -162,6 +162,27 @@ class add_cate:
 
         return response(1,'add focus succ')
 
+def get_user_info_template(sql, user_id, step='\n'):
+    source = db.query(sql, vars={'userid':user_id})
+    ss = {}
+    for i in source:
+        val = i.id
+        if ss1.has_key(val):
+            ss[val] += i.url + step
+        else:
+            ss[val]  = i.url + step
+    return ss
+    
+
+def get_user_source (user_id):
+    sql = "select webfocus.id as id,websource.url as url from webfocus,websource where webfocus.userid=$userid and webfocus.id = websource.focus_id";
+    return get_usr_info_template (sql, user_id)
+
+
+def get_user_keyword (user_id):
+    sql = "select webfocus.id as id,webkeywords.word as word from webfocus,webkeywords where webfocus.userid=$userid and webfocus.id = webkeywords.focus_id"
+    return get_user_info_template(sql, user_id)
+
 class categorys:
     def GET (self):
         to_login()
@@ -169,30 +190,11 @@ class categorys:
         
         tmp1 = dict (userid=user_id)
         category = db.select ('webfocus', tmp1, where="userid=$userid",order="created DESC")
-        
-        sql = "select webfocus.id as id,websource.url as url from webfocus,websource where webfocus.userid=$userid and webfocus.id = websource.focus_id";
-        source = db.query(sql, vars={'userid':user_id})
 
-        sql = "select webfocus.id as id,webkeywords.word as word from webfocus,webkeywords where webfocus.userid=$userid and webfocus.id = webkeywords.focus_id"
-        keyword = db.query(sql, vars={'userid':user_id})
 
         step = '\n'
-
-        ss1 = {}
-        for i in source:
-            val = i.id
-            if ss1.has_key(val):
-                ss1[val] += i.url + step
-            else:
-                ss1[val]  = i.url + step
-
-        ss2 = {}
-        for j in keyword:
-            val = j.id
-            if ss2.has_key(val):
-                ss2[val] += j.word + step 
-            else:
-                ss2[val]  = j.word + step
+        
+        ss1 = get_user_source(user_id)
 
         ss3 = []
         names = []
@@ -213,15 +215,8 @@ class relative:
         to_login()
         user_id = session.user_id
 
-        sql = "select webfocus.id as fid,websource.url as url from webfocus,websource where webfocus.userid=$userid and webfocus.id = websource.focus_id";
-
-        sql = "select weburls.* from weburls, webfocus, websource, webkeywords where webfocus.userid=$userid and and webfocus.id=webkeywords.focus.id and websource.focus_id = webfocus.id and weburls.url=websource.url and weburls.title like webkeywords.word "
-        source = db.query(sql, vars={'userid':user_id})
-
-        sql = "select webfocus.id as id,webkeywords.word as word from webfocus,webkeywords where webfocus.userid=$userid and webfocus.id = webkeywords.focus_id"
-        keyword = db.query(sql, vars={'userid':user_id})
-
-        step = '\n'
+        source  = get_user_source()
+        keyword = get_user_keyword()
 
         return 
 

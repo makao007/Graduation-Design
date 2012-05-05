@@ -7,7 +7,8 @@
     'get_cate': '/get_cate',
     'login'   : '/login',
     'logout'  : '/logout',
-    'islogin' : '/islogin'
+    'islogin' : '/islogin',
+    'relative': '/relative'
 }
 
 function mul_line (s) {
@@ -41,8 +42,8 @@ function load_cate (names) {
     clear_cate_list();
     var div = $('#main_left_content');
     $.each (names, function (index, value) {
-            $('<li onclick=load_content(' + index + '); >' + value + '</li>').appendTo(div);
-            });
+            $('<li onclick=load_content(' + value[0] + '); >' + value[1] + '</li>').appendTo(div);
+    });
 }
 
 //查询的主要界面
@@ -51,17 +52,12 @@ function load_content (id) {
     var contents = mydata.data[id];
     var div = $('#main_right_content');
     $.each (contents, function (index, value) {
-            var ul = $('<ul/>');
-            for (var i=0;i<value.length;i++) {
-                if (i==3) {
-                    $('<li/>').html('<a target="_blank" href="' + value[i] + '">' + value[i] + '</a>').addClass('item'+(1+i)).appendTo(ul);
-                }
-                else {    
-                    $('<li/>').text(value[i]).addClass('item'+(1+i)).appendTo(ul);
-                }
-            }
-            div.append(ul);
-            });
+        var ul = $('<ul/>');
+        $('<li/>').addClass('item1').text(index+1).appendTo(ul);
+        $('<li/>').addClass('item2').text(value[0]).appendTo(ul);
+        $('<li/>').html('<a target="_blank" href="' + value[3] + '" title="' + value[2] + '">' + value[1] + '</a>').addClass('item3').appendTo(ul);
+        div.append(ul);
+    });
 }
 
 //显示管理条目
@@ -147,16 +143,6 @@ function load_manage (data) {
             });
 }
 
-// 加载条目信息
-function load_data(data) {
-    load_cate(data);
-}
-
-// ajax从服务器获取信息
-function get_data () {
-    var url = '/';
-    $.get(url,{}, load_data);
-}
 
 function logout () {
     $.get (server_url.logout,{},function(data){ location.reload(); });
@@ -256,13 +242,13 @@ function encode_url (d) {
 }
 
 function reload_data () {
-    mydata = {'names':[], 'name_info':[]};
+    mydata = {'name_info':[], 'data':[]};
     reflash_data ();
     get_category_info();
 }
 
 function reflash_data () {
-    load_data(mydata.names); 
+    load_cate(mydata.name_info); 
     load_manage(mydata.name_info);
 }
 
@@ -271,6 +257,9 @@ function get_category_info () {
     jQuery.getJSON('categorys?callback=?',function (data) {
         mydata = data;
         reflash_data();
+        jQuery.getJSON(server_url['relative'] + '?callback=?', function (data) {
+           mydata['data'] = data;
+        }); 
     });
 }
 

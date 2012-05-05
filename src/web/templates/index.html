@@ -29,7 +29,7 @@
         div#main_right_title ul li {float:left; }
 
         div#main_right_content {text-align:left; font-size:15px; margin:3px 5px;}
-        div#main_right_content ul {height:18px; margin:3px 0px 10px 5px; border-bottom:1px dashed #e5e5e5;}
+        div#main_right_content ul {height:18px; margin:3px 0px 10px 0px; border-bottom:1px dashed #e5e5e5;}
         div#main_right_content ul li {float:left;}
         div#main_right_content ul:nth-child(even) {background:#f3f3f3;}
 
@@ -71,8 +71,8 @@
         .title {color:black; display:block; background-color:#00FFFF; font-size:14px; height:23px; padding:5px 5px; font-weight:bold; border-bottom:1px solid #eee; clear:both; text-align:left;}
         .item1,.item2,.item3,.item4,.item5 {overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:8px;}
         .item1 {width:50px;}
-        .item2 {width:100px;}
-        .item3 {width:80px;}
+        .item2 {width:140px;}
+        .item3 {width:430px;}
         .item4 {width:200px; margin-right:10px;} 
         .item5 {width:200px;}
         .item6 {width:100px;}
@@ -112,9 +112,7 @@
                 <ul>
                   <li class="item1">序号</li>
                   <li class="item2">处理时间</li>
-                  <li class="item3">相似度值</li>
-                  <li class="item4">URL链接</li>
-                  <li class="item5">URL标题</li>
+                  <li class="item3">URL标题</li>
                 </ul>
             </div>
             <div id="main_right_content"></div> 
@@ -186,6 +184,7 @@
 </body>
 <script>
 //mydata = {'names':['google','facebook'], 'data':[[['1','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['2','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['3','4/12 12:01:01','0.13333','http://google.com/p/aa/a.html','Google推出新产品'],['4','1/1 7:23:21','0.63','http://youtube.com','Youtube新电视']], [['1','3/11 11:10:11','0.3111','http://www.facebook/aadld/html','Facebook年报']]], 'name_info': [['12','google','Google','http://www.google.com/xx.com;http://baidu.com/axx/aa.xml'],['12','facebook','Facebook;脸谱','http://www.facebook.com']]};
+
 
 var mydata ;
 

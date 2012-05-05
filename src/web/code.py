@@ -184,10 +184,9 @@ def get_user_keyword (user_id, step='\n'):
     return get_user_info_template(sql, user_id, step)
 
 def get_user_focus_id (user_id):
-    sql = "select id from webfocus where usersid=$userid"
+    sql = "select id from webfocus where userid=$userid"
     result = db.query(sql, vars={'userid':user_id})
-    ids = [i.id for i in result]
-    return ids
+    return [i.id for i in result]
 
 class categorys:
     def GET (self):
@@ -204,15 +203,12 @@ class categorys:
         ss2 = get_user_keyword(user_id)
 
         ss3 = []
-        names = []
         for k in category:
             ss3.append ( [k.id, k.title, ss1.get(k.id,''), ss2.get(k.id,'')] )
-            names.append (k.title)
-
 
         #web.header('Content-type', 'application/json')
         web.header('Content-type','text/javascript')
-        data = json.dumps({'names':names, 'name_info': ss3})
+        data = json.dumps({'name_info': ss3})
 
         #jsonp
         return web.input().get('callback') + '(' + data + ');'
@@ -223,11 +219,35 @@ class relative:
         user_id = session.user_id
         focus_id= get_user_focus_id(user_id)
 
-        ss2 = get_user_keyword(user_id,'&')
+        ss2 = get_user_keyword(user_id,'|')
+        print ss2
 
-        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,webfocus_url, weburl_content_split where webfocus_url.focus_id=$id and webfocus_url.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and like 'hello' "
+        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,webfocus_url, weburl_content_split where webfocus_url.focus_id=$id and webfocus_url.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and "
 
-        return 
+
+        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,weburl_focus, weburl_content_split where weburl_focus.focus_id=$fid and weburl_focus.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and to_tsvector('english',weburl_content_split.title|| weburl_content_split.description) @@ to_tsquery($keyword) ;"
+
+        result = {}
+        for fid in focus_id:
+            temp = db.query(sql, vars={'fid':fid, 'keyword':ss2.get(fid,' ')[:-1]})
+            focus_result = []
+            for tmp  in temp:
+                print tmp
+                focus_result.append ( [tmp.download_time.__str__()[:-7], tmp.title, tmp.description, tmp.url ] )
+            result[fid] = focus_result
+
+        print result
+
+        #where to_tsvector('english', title) @@ to_tsquery('english', 'friend');
+        #SELECT title FROM pgweb WHERE to_tsvector(title || body) @@ to_tsquery('create & table') ORDER BY last_mod_date DESC LIMIT 10;
+
+        web.header('Content-type','text/javascript')
+        data = json.dumps(result)
+        if web.input().get('callback'):
+            return web.input().get('callback') + '(' + data + ');'    #jsonp
+        else:
+            return result
+
 
 class favicon:
     def GET (self):

@@ -100,34 +100,35 @@ def split_word (config):
             #print len(i[3]),title, descr
             #conte = split_cn.split_text(i[3])
 
-            print 'split pre'
             title = split_word_text(i[1])
             descr = split_word_text(i[2])
             conte = split_word_text(i[3])
-            print 'split here'
 
             save_splited (i[0], title, descr, conte)
-            print 'split word done. wati ... %d seconds' % config.get('sleep')
 
         #time.sleep(config.get('sleep'))
 
 #url, save_func, match_url, max_deep, max_page
 def scrapy_content(config):
-    while 1:
+        #while 1:
         scr = scrapy.Scrapy('', pagesave,'',2,100)
         scr.join_visited(get_visited_urls())
         scr.join_queue(get_all_urls())
         scr.start_scrapy()        #begin scrapy 
         print 'scrapy done. wait ... %d seconds' % config.get('sleep')
 
-        time.sleep(config.get('sleep'))
+        #time.sleep(config.get('sleep'))
+
 
 def go ():
-    config = {'sleep':3*60}
-    #scrapy_content (config)
-    split_word (config)
+    config = {'sleep':3*6}
+    while 1:
+        scrapy_content (config)
+        split_word (config)
+        time.sleep(config.get('sleep'))
     #thread.start_new_thread(scrapy_content, (config,))
     #thread.start_new_thread(split_word, (config,))
+
 
 
 if __name__ == "__main__":

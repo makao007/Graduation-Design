@@ -81,7 +81,7 @@ def is_alnum(s):
 
 def pre_split (s):
     s=cn_encode(s)
-    sign = cn_encode("[。，！`《》<>\.,//\t\r?]")
+    sign = cn_encode("[。，！`《》、<>\.,//\t\r?]")
     s=re.sub(sign,'',s)
     return s
 
@@ -114,6 +114,8 @@ def split_article (s,new_dict):
         if k<=0:
             break
         i += k
+        if i%100==0 or i > 200000 : 
+            print i,
     return ' '.join(word_list)
 
 
@@ -124,7 +126,7 @@ def test_split_article (s):
     dict_path = "dict2.txt"   #词库文件
     t  = re.compile(r'\s{2,}',re.M|re.S)
     ss = split_article (s, create_new_dict(get_dict_content(dict_path),dict_leng))
-    return t.sub(' ',ss))
+    return t.sub(' ',ss)
 
     #write_file('result.txt', ss.replace('\n','\r\n'))    #保存数据到result.txt
 
@@ -138,5 +140,5 @@ new_dict = create_new_dict(get_dict_content(dict_path),dict_leng)
 def split_text (s):
     global new_dict,t
     ss = split_article (s, new_dict)
-    return t.sub(' ',ss))
+    return t.sub(' ',ss)
 

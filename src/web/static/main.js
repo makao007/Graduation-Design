@@ -78,9 +78,9 @@ function edit_cate (id) {
     }
     $('#edit_cate div:first').text (title);
     $('#edit_cate input:first').val(data[0]);
-    $('#edit_cate input').get(1).value = data[1];
-    $('#edit_cate textarea:first').text (mul_line(data[3]));
-    $('#edit_cate textarea').get(1).value = (mul_line(data[2]));
+    $('#edit_cate input:eq(1)').val(data[1]);
+    $('#edit_cate textarea:first').val(mul_line(data[3]));
+    $('#edit_cate textarea:eq(1)').val(mul_line(data[2]));
 
     display_block('#edit_cate');
 }
@@ -136,7 +136,7 @@ function load_manage (data) {
     var div = $("#manage_list");
     $.each (data, function (index, value ) {
             var ul = $("<ul/>");
-            $('<li/>').text (index).addClass('ctem0').appendTo(ul);
+            $('<li/>').text (index+1).addClass('ctem0').appendTo(ul);
             $('<li/>').text (value[1]).addClass('ctem1').appendTo(ul);
             $('<li/>').text (value[3]).addClass('ctem2').appendTo(ul);
             $('<li/>').text (value[2]).addClass('ctem3').appendTo(ul);

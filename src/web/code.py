@@ -162,26 +162,32 @@ class add_cate:
 
         return response(1,'add focus succ')
 
-def get_user_info_template(sql, user_id, step='\n'):
+def get_user_info_template(sql, user_id, step):
     source = db.query(sql, vars={'userid':user_id})
     ss = {}
     for i in source:
         val = i.id
-        if ss1.has_key(val):
+        if ss.has_key(val):
             ss[val] += i.url + step
         else:
             ss[val]  = i.url + step
     return ss
     
 
-def get_user_source (user_id):
+def get_user_source (user_id,step='\n'):
     sql = "select webfocus.id as id,websource.url as url from webfocus,websource where webfocus.userid=$userid and webfocus.id = websource.focus_id";
-    return get_usr_info_template (sql, user_id)
+    return get_user_info_template (sql, user_id, step)
 
 
-def get_user_keyword (user_id):
-    sql = "select webfocus.id as id,webkeywords.word as word from webfocus,webkeywords where webfocus.userid=$userid and webfocus.id = webkeywords.focus_id"
-    return get_user_info_template(sql, user_id)
+def get_user_keyword (user_id, step='\n'):
+    sql = "select webfocus.id as id,webkeywords.word as url from webfocus,webkeywords where webfocus.userid=$userid and webfocus.id = webkeywords.focus_id"
+    return get_user_info_template(sql, user_id, step)
+
+def get_user_focus_id (user_id):
+    sql = "select id from webfocus where usersid=$userid"
+    result = db.query(sql, vars={'userid':user_id})
+    ids = [i.id for i in result]
+    return ids
 
 class categorys:
     def GET (self):
@@ -195,11 +201,12 @@ class categorys:
         step = '\n'
         
         ss1 = get_user_source(user_id)
+        ss2 = get_user_keyword(user_id)
 
         ss3 = []
         names = []
         for k in category:
-            ss3.append ( [k.id, k.title, ss1[k.id], ss2[k.id]] )
+            ss3.append ( [k.id, k.title, ss1.get(k.id,''), ss2.get(k.id,'')] )
             names.append (k.title)
 
 
@@ -214,9 +221,11 @@ class relative:
     def GET (self):
         to_login()
         user_id = session.user_id
+        focus_id= get_user_focus_id(user_id)
 
-        source  = get_user_source()
-        keyword = get_user_keyword()
+        ss2 = get_user_keyword(user_id,'&')
+
+        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,webfocus_url, weburl_content_split where webfocus_url.focus_id=$id and webfocus_url.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and like 'hello' "
 
         return 
 

@@ -57,7 +57,7 @@ class Scrapy:
             self.content = ''
             print 'download %s error ' % self.cur_url
 
-        ana = Analyze(self.cur_url, self.content,datetime.datetime.now(), last_modify, self.save_func)
+        ana = Analyze(self.cur_url, self.content, datetime.datetime.now(), last_modify, self.save_func)
         ana.save_record()
 
     def _findurls (self):
@@ -136,6 +136,11 @@ class Scrapy:
                 'visited_hash': self.visited_hash, 'unvisit_url': self.unvisit,
                 'unvisit_hash': self.unvisit_hash }
 
+    def join_visited (self, urls):
+        for url in urls:
+            #self.visited.append (url)
+            self.visited_hash.append (self._md5(url))
+
     def join_queue (self, urls):
         for url in urls:
             if self._checkin_url (self._md5(url)):
@@ -153,7 +158,7 @@ class Scrapy:
                 continue
             self._fetch()
             self._checkin (self._findurls())
-            self.visited.append(self.cur_url)
+            #self.visited.append(self.cur_url)
             self.visited_hash.append (self._md5(self.cur_url))
 
         return self._response ()

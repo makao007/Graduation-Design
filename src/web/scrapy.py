@@ -6,10 +6,12 @@ import datetime
 import urllib,urllib2
 import hashlib
 import urlparse
+import socket
+socket.setdefaulttimeout(10)
 
 class Scrapy:
     # source url, max deep, match url
-    def __init__ (self, url,save_func, match_url='', max_deep=2,max_page=1000):
+    def __init__ (self, url,save_func,focus_id, match_url='', max_deep=2,max_page=1000):
         self.src_url = url
         self.pre_url = ''
         self.cur_url = url
@@ -34,6 +36,7 @@ class Scrapy:
         self.last_deep_url = ''
     
         self.save_func  = save_func
+        self.focus_id   = focus_id
 
         self.join_queue ([url])
     
@@ -57,7 +60,7 @@ class Scrapy:
             self.content = ''
             print 'download %s error ' % self.cur_url
 
-        ana = Analyze(self.cur_url, self.content, datetime.datetime.now(), last_modify, self.save_func)
+        ana = Analyze(self.cur_url, self.content, datetime.datetime.now(), last_modify, self.save_func, self.focus_id)
         ana.save_record()
 
     def _findurls (self):
@@ -164,7 +167,7 @@ class Scrapy:
         return self._response ()
 
 class Analyze:
-    def __init__ (self, url, content, created, last_modify, save_data):
+    def __init__ (self, url, content, created, last_modify, save_data, focus_id):
         self.url     = url
         self.title   = ''
         self.content = content
@@ -172,6 +175,7 @@ class Analyze:
         self.description = ''
         self.last_modify = last_modify
         self.created     = created
+        self.focus_id = focus_id
 
         self._get_title()
         self._get_desc ()
@@ -206,5 +210,5 @@ class Analyze:
         self.body_text = ss
 
     def save_record(self):
-        self.save_data (self.url, self.title, self.description, self.body_text, self.created, self.last_modify)
+        self.save_data (self.url, self.title, self.description, self.body_text, self.created, self.last_modify, self.focus_id)
 

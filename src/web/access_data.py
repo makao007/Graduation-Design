@@ -26,7 +26,7 @@ def utf8(s):
                         ss = s
         return ss
 
-def pagesave (url, title, desc, text, download_time, last_modify ):
+def pagesave (url, title, desc, text, download_time, last_modify, focus_id ):
     global cur,conn
     print url,title
     title = utf8(title)
@@ -35,15 +35,11 @@ def pagesave (url, title, desc, text, download_time, last_modify ):
     cur.execute ("delete from weburls where url=%s ;" , (url,))
 
     cur.execute ("insert into weburls(url, title, description, content, last_modify) values (%s,%s,%s,%s,%s) RETURNING id;", (url, title, desc, text, last_modify))
-    #cur.execute ("insert into weburls(url, title) values (%s,%s) RETURNING id;", (url, title))
-
-    #cur.execute  ("insert into weburls (url, title, description, content, last_modify) values (%s,utf8(%s,%s,%s,%s) ; ", (url, title, desc, text, last_modify,))
 
     temp = cur.fetchone()[0]    #url_id
 
-    cur.execute ("select focus_id from websource where url=%s ;", (url,))
-    for i in cur.fetchall():
-        cur.execute ("insert into weburl_focus (url_id, focus_id) values (%s, %s) ; " , (temp, i[0])) 
+    #cur.execute ("select focus_id from websource where url=%s ;", (url,))
+    cur.execute ("insert into weburl_focus (url_id, focus_id) values (%s, %s) ; " , (temp, focus_id)) 
 
     conn.commit()
 
@@ -61,9 +57,14 @@ def get_visited_urls (update_time = 60):
     cur.execute (sql , (update_time,))
     return [i[0] for i in cur.fetchall()]
 
-def get_all_urls ():
+def get_all_urls (focus_id):
     global cur
-    cur.execute("select distinct(url) from websource ;")
+    cur.execute ("select distinct(url) from websource where focus_id = %s ;", (focus_id,))
+    return [i[0] for i in cur.fetchall()]
+
+def get_all_fid ():
+    global cur
+    cur.execute ("select id from webfocus ")
     return [i[0] for i in cur.fetchall()]
 
 def save_splited (url_id, title, description, content):
@@ -88,7 +89,6 @@ def split_word_text (s):
         result.append (tok.text)
     return ' '.join(result)
 
-
 def split_word (config):
         #while 1:
         sql = "select id,title,description,content from weburls where splited=false"
@@ -111,11 +111,13 @@ def split_word (config):
 #url, save_func, match_url, max_deep, max_page
 def scrapy_content(config):
         #while 1:
-        scr = scrapy.Scrapy('', pagesave,'',2,100)
-        scr.join_visited(get_visited_urls())
-        scr.join_queue(get_all_urls())
-        scr.start_scrapy()        #begin scrapy 
-        print 'scrapy done. wait ... %d seconds' % config.get('sleep')
+        focus_id = get_all_fid()
+        for fid in focus_id:
+            scr = scrapy.Scrapy('', pagesave,fid,'',2,100)
+            scr.join_visited(get_visited_urls())
+            scr.join_queue(get_all_urls(fid))
+            scr.start_scrapy()        #begin scrapy 
+            print 'scrapy done. wait ... %d seconds' % config.get('sleep')
 
         #time.sleep(config.get('sleep'))
 

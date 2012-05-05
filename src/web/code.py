@@ -220,7 +220,6 @@ class relative:
         focus_id= get_user_focus_id(user_id)
 
         ss2 = get_user_keyword(user_id,'|')
-        print ss2
 
         sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,webfocus_url, weburl_content_split where webfocus_url.focus_id=$id and webfocus_url.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and "
 
@@ -232,11 +231,9 @@ class relative:
             temp = db.query(sql, vars={'fid':fid, 'keyword':ss2.get(fid,' ')[:-1]})
             focus_result = []
             for tmp  in temp:
-                print tmp
                 focus_result.append ( [tmp.download_time.__str__()[:-7], tmp.title, tmp.description, tmp.url ] )
             result[fid] = focus_result
 
-        print result
 
         #where to_tsvector('english', title) @@ to_tsquery('english', 'friend');
         #SELECT title FROM pgweb WHERE to_tsvector(title || body) @@ to_tsquery('create & table') ORDER BY last_mod_date DESC LIMIT 10;

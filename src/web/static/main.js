@@ -42,7 +42,7 @@ function load_cate (names) {
     clear_cate_list();
     var div = $('#main_left_content');
     $.each (names, function (index, value) {
-            $('<li onclick=load_content(' + value[0] + '); >' + value[1] + '</li>').appendTo(div);
+            $('<li title="'+ value[3] + '" onclick=load_content(' + value[0] + '); >' + value[1] + '</li>').appendTo(div);
     });
 }
 

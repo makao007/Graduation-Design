@@ -8,7 +8,8 @@
     'login'   : '/login',
     'logout'  : '/logout',
     'islogin' : '/islogin',
-    'relative': '/relative'
+    'relative': '/relative',
+    'search':   '/search'
 }
 
 function mul_line (s) {
@@ -36,6 +37,24 @@ function clear_cate_list () {
     clear_div('#manage_list');
 }
 
+function search() {
+    var word = $('input#search_word').val().trim();
+    var path = server_url["search"] + "?" + encode_url ({"word": encodeURIComponent(word)})+'&callback=?';
+    if (word.length==0) {
+        $('span#search_time').text('输出不能为空');
+        return ;
+    }
+
+    $('span#search_time').empty();
+    $.getJSON(path, function (data) {
+        $('input#search_word').val (data['word']);
+        $('#search_content').empty();
+        $('span#search_time').text('共有 ' + data['data'].length + '条记录;  用时 ' + data['time']);
+
+        load_record ($('#search_content'), data['data']);
+    });
+}
+
 //左边栏目的显示
 function load_cate (names) {
     clear_cate();
@@ -46,18 +65,22 @@ function load_cate (names) {
     });
 }
 
-//查询的主要界面
-function load_content (id) {
-    clear_value();
-    var contents = mydata.data[id];
-    var div = $('#main_right_content');
-    $.each (contents, function (index, value) {
+function load_record (div, data) {
+    $.each (data, function (index, value) {
         var ul = $('<ul/>');
         $('<li/>').addClass('item1').text(index+1).appendTo(ul);
         $('<li/>').addClass('item2').text(value[0]).appendTo(ul);
         $('<li/>').html('<a target="_blank" href="' + value[3] + '" title="' + value[2] + '">' + value[1] + '</a>').addClass('item3').appendTo(ul);
         div.append(ul);
     });
+}
+
+//查询的主要界面
+function load_content (id) {
+    clear_value();
+    var contents = mydata.data[id];
+    var div = $('#main_right_content');
+    load_record (div, contents);
 }
 
 //显示管理条目

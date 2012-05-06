@@ -1,6 +1,7 @@
 import web
 import json
 import hashlib
+import time
 
 #web.config.debug = False
 web.config.session_parameters['timeout'] = 3600
@@ -18,6 +19,7 @@ urls = (
     '/del_cate','del_cate',
     '/categorys', 'categorys',
     '/relative',  'relative',
+    '/search', 'search',
     '/favicon.ico', 'favicon',
     )
 
@@ -221,9 +223,6 @@ class relative:
 
         ss2 = get_user_keyword(user_id,'|')
 
-        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,webfocus_url, weburl_content_split where webfocus_url.focus_id=$id and webfocus_url.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and "
-
-
         sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,weburl_focus, weburl_content_split where weburl_focus.focus_id=$fid and weburl_focus.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and to_tsvector(weburl_content_split.title|| weburl_content_split.description) @@ to_tsquery($keyword) ;"
 
         result = {}
@@ -245,6 +244,25 @@ class relative:
         else:
             return result
 
+class search :
+    def GET (self):
+        t1 = time.time()
+        word = web.input().get('word','Java').strip()
+        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls, weburl_content_split where weburls.id=weburl_content_split.url_id and to_tsvector(weburl_content_split.title|| weburl_content_split.description) @@ to_tsquery($keyword) ;"
+        temp = db.query(sql, vars={'keyword': word})
+        word_result= []
+        for tmp  in temp:
+            word_result.append ( [tmp.download_time.__str__()[:-7], tmp.title, tmp.description, tmp.url ] )
+
+        t2 = time.time()
+        result = {'word': word, 'data': word_result, 'time':t2-t1}
+
+        web.header('Content-type','text/javascript')
+        data = json.dumps(result)
+        if web.input().get('callback'):
+            return web.input().get('callback') + '(' + data + ');'    #jsonp
+        else:
+            return result
 
 class favicon:
     def GET (self):

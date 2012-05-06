@@ -224,7 +224,7 @@ class relative:
         sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,webfocus_url, weburl_content_split where webfocus_url.focus_id=$id and webfocus_url.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and "
 
 
-        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,weburl_focus, weburl_content_split where weburl_focus.focus_id=$fid and weburl_focus.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and to_tsvector('english',weburl_content_split.title|| weburl_content_split.description) @@ to_tsquery($keyword) ;"
+        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,weburl_focus, weburl_content_split where weburl_focus.focus_id=$fid and weburl_focus.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and to_tsvector(weburl_content_split.title|| weburl_content_split.description) @@ to_tsquery($keyword) ;"
 
         result = {}
         for fid in focus_id:

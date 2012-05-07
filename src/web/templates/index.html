@@ -75,6 +75,12 @@
         div#search_content ul {margin:3px 0px 10px 5px;}
         div#search_content ul li {float:left; }
 
+        div#config { width: 500px; border:1px solid #eee; height:auto; margin: 0 auto; clear:both;}
+        div#config b {cursor:pointer;}
+        div#config p {background:#f3f3f3; font-size:14px; padding:5px 3px;}
+        div#config form {font-size:15px;}
+        div#config .content {margin:5px 10px; }
+
         .title {color:black; display:block; background-color:#00FFFF; font-size:14px; height:23px; padding:5px 5px; font-weight:bold; border-bottom:1px solid #eee; clear:both; text-align:left;}
         .item1,.item2,.item3,.item4,.item5 {overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:8px;}
         .item1 {width:50px;}
@@ -190,25 +196,59 @@
     <div id="message" title="点击关闭本消息" onclick="$$('#message').slideUp('slow');"></div>
 
 
-        <div id="search">
-            <div class='title'>
-                <span>搜索本站的数据库</span>
-                <span style="float:right; cursor:pointer;" onclick="hide_block('#search');">[close]</span>
-            </div>
-            <form onsubmit="search();return false;" >
-                <input type="text" id="search_word" length=20>
-                <input type="submit" value="  搜索  ">
-                <span id="search_time" style="color:gray;"></span>
-            </form>
-            <div id="search_title">
-                <ul>
-                  <li class="item1">序号</li>
-                  <li class="item2">处理时间</li>
-                  <li class="item3">链接标题</li>
-                </ul>
-            </div>
-            <div id="search_content"></div> 
+    <div id="search">
+        <div class='title'>
+            <span>搜索本站的数据库</span>
+            <span style="float:right; cursor:pointer;" onclick="hide_block('#search');">[close]</span>
         </div>
+        <form onsubmit="search(); return false" >
+            <input type="text" id="search_word" length=20>
+            <input type="submit" value="  搜索  ">
+            <span id="search_time" style="color:gray;"></span>
+        </form>
+        <div id="search_title">
+            <ul>
+              <li class="item1">序号</li>
+              <li class="item2">处理时间</li>
+              <li class="item3">链接标题</li>
+            </ul>
+        </div>
+        <div id="search_content"></div> 
+    </div> <!-- end search -->
+    
+
+    <div id="config">
+        <div class='title'>
+            <span>Administrator 网站配置</span>
+            <span style="float:right; cursor:pointer;" onclick="hide_block('#config');">[close]</span>
+        </div>
+        <div class="content">
+    
+            <p>修改 配置参数 <b onclick="jQuery('div#config table:eq(0)').toggle('slow');">[ 显示|隐藏 ]</b></p>
+            <table border="0">
+                <form onsubmit="update_config();">
+                <tr><td>最大爬虫页数</td><td><input type="text" name="scrapy_max_page" value=""/></td></tr>
+                <tr><td>最大爬虫深度</td><td><input type="text" name="scrapy_max_deep" value=""/></td></tr>
+                <tr><td>爬虫超时时间</td><td><input type="text" name="scrapy_max_wait" value=""/></td></tr>
+                <tr><td>搜索返回条数</td><td><input type="text" name="search_max_num" value="" /></td></tr>
+                <tr><td></td><td><input type="submit" value="修改参数" /></td></tr>
+                </form>
+            </table>
+            <br/>
+
+            <p>修改管理员密码 <b onclick="jQuery('div#config table:eq(1)').toggle('slow');">[ 显示|隐藏 ]</b></p>
+            <table border="0" style="display:none;">
+                <form onsubmit="update_password" id="update_password">
+                <tr><td>旧密码</td><td><input type="password" name="odl_password" value="" /></td></tr>
+                <tr><td>新密码</td><td><input type="password" name="new_password" value="" /></td></tr>
+                <tr><td>确认新密码</td><td><input type="password" name="new_password2" value=""/></td></tr>
+                <tr><td></td><td><input type="submit" value="修改密码"/></td></tr>
+                </form>
+            </table>
+            
+        </div> <!-- end content -->
+    </div><!-- end config -->
+    
 
 </body>
 <script>

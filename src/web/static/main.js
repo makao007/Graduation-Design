@@ -42,7 +42,6 @@ function search() {
     var path = server_url["search"] + "?" + encode_url ({"word": encodeURIComponent(word)})+'&callback=?';
     if (word.length==0) {
         $('span#search_time').text('输出不能为空');
-        return ;
     }
 
     $('span#search_time').empty();

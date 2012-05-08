@@ -2,6 +2,7 @@ import web
 import json
 import hashlib
 import time
+import re
 
 #web.config.debug = False
 web.config.session_parameters['timeout'] = 3600
@@ -248,6 +249,7 @@ class search :
     def GET (self):
         t1 = time.time()
         word = web.input().get('word','Java').strip()
+        word = re.sub(r"\s+",'&',word)
         sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls, weburl_content_split where weburls.id=weburl_content_split.url_id and to_tsvector(weburl_content_split.title|| weburl_content_split.description) @@ to_tsquery($keyword) ;"
         temp = db.query(sql, vars={'keyword': word})
         word_result= []

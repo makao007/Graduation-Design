@@ -298,5 +298,16 @@ function islogin() {
     });
 }
 
+function load_statics (id) {
+    $('#statics_title').text('');
+    $('#statics_content').html('');
+
+    $('#statics_title').text ($('#statics_'+id + ' div:eq(0)').text());
+    $('#statics_content').html($('#statics_'+id + ' div:eq(1)').html());
+
+    $('#statics div ul li').css ('background','white');
+    $('#statics div ul li:eq(' + (id-1) + ')').css ('background','#f3f3f3');
+}
+
 
 

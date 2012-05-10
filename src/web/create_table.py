@@ -24,7 +24,14 @@ cur.execute ("create table if not exists weburl_focus(url_id serial references w
 
 cur.execute ("create table if not exists weburl_content_split (id serial primary key, url_id serial references weburls (id), title varchar(2048), content text, description varchar(10240)); ")
 
-cur.execute ("insert into webuser (username,password) values (%s,%s)", ('user',hashlib.md5('1234').hexdigest()) )
+cur.execute ("create table if not exists webadmin (id serial primary key, username varchar(20) not null unique, password char(32) not null, created timestamp default now() );")
+
+cur.execute ("create table if not exists webconfig (id serial primary key, config varchar(1024), created timestamp default now()) ; ")
+
+#cur.execute ("create table if not exists webquery_log (id serial primary key , 
+
+#cur.execute ("insert into webuser (username,password) values (%s,%s)", ('user',hashlib.md5('1234').hexdigest()) )
+cur.execute ("insert into webadmin (username,password) values (%s,%s)", ('user',hashlib.md5('1234').hexdigest()) )
 
 cur.execute ('select * from webuser;');
 result = cur.fetchone()

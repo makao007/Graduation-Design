@@ -9,7 +9,11 @@
     'logout'  : '/logout',
     'islogin' : '/islogin',
     'relative': '/relative',
-    'search':   '/search'
+    'search':   '/search',                // below admin manage
+    'is_admin': '/is_admin',
+    'admin_login':'/admin_login',
+    'is_admin_login' : '/admin_is_login',
+    'update_admin_password': '/update_admin_password'
 }
 
 function mul_line (s) {
@@ -170,8 +174,8 @@ function logout () {
     $.get (server_url.logout,{},function(data){ location.reload(); });
 }
 
-function login () {
-    var input = $('#login input');
+function login_base (block_id, url, call_back1, call_back2 ) {
+    var input = $('#' + block_id + ' input');
     var user  = input[0].value;
     var pawd  = input[1].value;
     if (user=='用户名' || pawd=='密码') {
@@ -180,21 +184,27 @@ function login () {
     }
     if (user.length > 0 && pawd.length > 0) {
         var parm = encode_url ({'username':user, 'password': pawd});
-        var url  = server_url.login + '?' + parm;
+        var url  = url + '?' + parm;
         $.get (url, {}, function (data) {
-            var tmp = $.parseJSON(data);
-            if (tmp.status == 0) {
-                display_msg (tmp.text);
+            var tmp = $.parseJSON(data);                                     
+            if (tmp.status == 1) {
+                $('#' + block_id).hide();
+                call_back1(tmp);   // login succ
             } else {
-                $('#nav ul li:first').html('您好：' + tmp.text);
-                $('#nav ul li:first').attr('onclick','');
-                $('#login').hide();
-                get_category_info();
+                call_back2(tmp);  // login fail
             }
         });
     } else {
         display_msg ('用户名和密码不能为空');
     }
+}
+
+function login () {
+    login_base ('login', server_url.login, function (tmp){
+            $('#nav ul li:first').html('您好：' + tmp.text); 
+            $('#nav ul li:first').attr('onclick',''); 
+            $('#login').hide(); get_category_info(); 
+        }, function(tmp){display_msg (tmp.text);} );
 }
 
 function add_cate () {
@@ -253,9 +263,8 @@ function add_user () {
 }
 
 function encode_url (d) {
-    var i;
     var result = '';
-    for (i in d) {
+    for (var i in d) {
         result = result + i + '=' + d[i] + '&';
     }
     if (result.length > 0)
@@ -299,15 +308,54 @@ function islogin() {
 }
 
 function load_statics (id) {
-    $('#statics_title').text('');
-    $('#statics_content').html('');
-
-    $('#statics_title').text ($('#statics_'+id + ' div:eq(0)').text());
-    $('#statics_content').html($('#statics_'+id + ' div:eq(1)').html());
+    $('div#statics_right>div').hide();
+    $('div#statics_'+id).show();
 
     $('#statics div ul li').css ('background','white');
     $('#statics div ul li:eq(' + (id-1) + ')').css ('background','#f3f3f3');
 }
 
+function admin_logout () {
+    location.href = "/admin_logout";
+}
 
+function admin_load (tmp) {
+    $('#statics').show();
+    $('#admin_login').hide();
+}
 
+function is_admin () {
+    $.get(server_url.is_admin_login,{}, function (data) {
+        var tmp = $.parseJSON(data);
+        if (tmp.status == 1) {
+            admin_load(tmp);
+            // load data
+        } });
+}
+
+function admin_login () {
+    login_base ('admin_login', server_url.admin_login, function (tmp) {console.log(tmp); admin_load (tmp);}, function (tmp) {console.log(tmp); });
+}
+
+function update_password() {
+    var input = $('#statics_6 input');
+    var old_pawd  = input[0].value.trim();
+    var new_pawd1 = input[1].value.trim();
+    var new_pawd2 = input[2].value.trim();
+    if (old_pawd && new_pawd1 && new_pawd2) {
+        if (new_pawd1 == new_pawd2) {
+            var url = server_url.update_admin_password + '?' + encode_url ({'password0':old_pawd,'password1':new_pawd1}) ;
+            console.log (url);
+            $.get(url, {}, function (data) {
+                if (data.status ) {
+                    display_msg ("修改密码成功");
+                } else {
+                    display_msg ("修改密码失败");
+                } });
+        } else {
+            display_msg ("两次输入的新密码不一致");
+        }
+    } else {
+        display_msg ("密码不能为空");
+    }
+}

@@ -1,0 +1,225 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <script src="/static/jquery.js"></script>
+    <script src="/static/main.js"></script>
+    <title>XX 相关搜索</title>
+    <style type="text/css" media="screen">
+        html,body {padding:0px; margin:0px;}
+        body {width:920px; margin:0 auto; height:600px;}
+        ul,li,div {padding:0px; margin:0px ; list-style:none;}
+        input {vertical-align : middle; padding:3px;}
+
+        div#nav {clear:both; width:100%; height:30px; background:lightblue; color:#333; margin-top:10px; }
+        div#nav ul {padding:0px; margin:0px; list-style:none; height:auto;}
+        div#nav ul li {float:left; list-style:none;  font-size:14px; cursor:pointer; height:24px; padding:5px 10px 0px 10px;}
+        div#nav ul li:hover {background:#222; color:white;}
+
+
+        div#background {position:absolute; left:0px; top:0px; background-color:gray; display:none; z-index:2;}
+
+        div#admin_login {width:250px; height:250px; border:1px solid #eee; float:right; margin-top:10px; }
+        div#admin_login input {height:45px; width:200px; border:1px solid lightblue; margin:10px 15px; font-size:17px; padding:3px;}
+
+        div#message {position: fixed; top:3px; width:auto; height:auto;  background:#E8D098; z-index:4; left:200px; padding:3px 14px; display:none; font-size:14px;}
+
+
+        div#statics {width:100%; height:600px; overflow-y: auto; margin-top:20px; display:none;}
+        div#statics div.statics_left{width: 150px; }
+        div#statics div.statics_left ul {margin:0 10px 20px 0;}
+        div#statics div.statics_left ul li{height:22px; text-align:center; border-bottom:1px dashed lightblue; padding-top:15px; display:block;cursor:pointer; }
+        div#statics div.statics_left ul li:hover{background:#f3f3f3;}
+
+        div#statics div.statics_right{width: 770px; height:auto;}
+        div#statics div.statics_right ul {clear:both;}
+        div#statics div.statics_right ul li{float:left; }
+
+        #statics_1,#statics_2,#statics_3,#statics_4,#statics_5,#statics_6 {display:none;}
+
+        .title {color:black; display:block; background-color:#00FFFF; font-size:14px; height:23px; padding:5px 5px; font-weight:bold; border-bottom:1px solid #eee; clear:both; text-align:left;}
+        .item1,.item2,.item3,.item4,.item5 {overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:8px;}
+        .item1 {width:50px;}
+        .item2 {width:140px;}
+        .item3 {width:430px;}
+        .item4 {width:200px; margin-right:10px;} 
+        .item5 {width:200px;}
+        .item6 {width:100px;}
+
+        .ctem0,.ctem1,.ctem2,.ctem3,.ctem4,.ctem5 {overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:8px;}
+        .ctem0 {width:50px;}
+        .ctem1 {width:100px;}
+        .ctem2 {width:150px;}
+        .ctem3 {width:350px;}
+        .ctem4 {width:40px; margin-left:20px;}
+        .ctem5 {width:40px;}
+
+        .block {border:1px solid #eee; padding:8px 20px; margin-left:25px; background-color:#eee; cursor:pointer; font-size:13px;}
+        .block:hover {background-color:#e9e9e9; font-weight:bold; }
+
+        .left {float:left;}
+        .right {float:right;}
+
+        input.button {background:#eee; border:0px; cursor:pointer;}
+        table tr {clear:both; }
+        table tr:first-child{border-bottom:1px solid #333; background:#f5f5f5;}
+        table tr th {font-size:14px; font-weight:normal;}
+        table tr th, table tr td {margin:5px 10px; padding:3px 20px;}
+
+        .left  {float:left; }
+        .right {float:right;}
+    </style>
+</head>
+
+<body>
+    <div id="nav">
+      <ul>
+            <li onclick="window.location.href='/';" >首页</li>
+            <li >您好，管理员</li>
+            <li onclick="admin_logout();" style="float:right;" >退出</li>
+      </ul>
+    </div>
+
+    <div id="background"></div>   <!-- 背景,覆盖页面 -->
+
+    <div id="admin_login">  <!-- 用户登录窗口 -->
+      <form onsubmit="admin_login(); return false;">
+          <p style="text-align:center; font-size:15px; color:#555;">管理员登录窗口</p>
+          <input type="text" value="用户名" onclick="if (this.value=='用户名') this.value='';"/>
+          <input type="password" value=""  />
+        <input type="button" value="登录" class="button" onclick="admin_login();"/>
+      </form>
+    </div>   <!-- end login -->
+
+    <div id="message" title="点击关闭本消息" onclick="$$('#message').slideUp('slow');"></div>
+
+
+
+            
+    <!-- 统计功能 (有多少注册用户，每个用户的栏目，每个栏目的内容, 用户的密码可以重设等) -->
+    <!-- 用户管理， 栏目管理,  URL爬虫log, 关键词查询log, 用户登录log -->
+    <div id="statics">
+        <div class="statics_left left">
+            <div class="title" style="text-align:center; background:#f3f3f3; margin-right:5px;" onclick="load_statics(0);">Admin 管理</div>
+            <ul>
+                <li onclick="load_statics(1)">用户管理</li>
+                <li onclick="load_statics(2)">查询排行</li>
+                <li onclick="load_statics(3)">爬虫日志</li>
+                <li onclick="load_statics(4)">登录日志</li>
+                <li onclick="load_statics(5)">网站配置</li>
+                <li onclick="load_statics(6)">修改密码</li>
+            </ul>
+        </div>
+        <div class="statics_right left" id="statics_right">
+            <!-- start static -->
+    <div id="statics_5">
+        <div class="title">修改 配置参数</div>
+        <div>
+        <table border="0">
+            <form onsubmit="update_config();">
+                <tr></tr>
+            <tr><td>最大爬虫页数</td><td><input type="text" value=""/></td></tr>
+            <tr><td>最大爬虫深度</td><td><input type="text" value=""/></td></tr>
+            <tr><td>爬虫超时时间</td><td><input type="text" value=""/>(秒)</td></tr>
+            <tr><td>爬虫间隔时间</td><td><input type="text" value=""/>(秒)</td></tr>
+            <tr><td>搜索返回条数</td><td><input type="text" value="" /></td></tr>
+            <tr><td>关键词返回条数</td><td><input type="text" value="" /></td></tr>
+            <tr><td></td><td><input type="submit" value="修改参数" /></td></tr>
+            </form>
+        </table>
+        </div>
+    </div>
+
+    <div id="statics_6">
+        <div class="title">修改 管理员密码</div>
+        <div>
+        <table border="0" >
+            <form onsubmit="update_password();return false;" >
+            <tr></tr>
+            <tr><td>旧密码</td><td><input type="password" value="" /></td></tr>
+            <tr><td>新密码</td><td><input type="password" value="" /></td></tr>
+            <tr><td>确认新密码</td><td><input type="password" value=""/></td></tr>
+            <tr><td></td><td><input type="submit" value="修改密码"/></td></tr>
+            </form>
+        </table>
+        </div>
+    </div>
+
+
+    <div id="statics_4">
+      <div class="title">用户登录日志</div>
+      <div>
+        <table border="0">
+            <tr><th>序号</th><th>时间</th><th>用户名</th><th>操作</th></tr>
+            <tr><td>1</td><td>2012-3-4 11:11:32</td><td>小明</td><td>登录</td></tr>
+            <tr><td>2</td><td>2012-3-4 11:11:32</td><td>小明</td><td>注销</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div id="statics_3">
+        <div class="title">网络爬虫日志</div>
+      <div>
+          <table border="0">
+              <tr><th>序号</th><th>时间</th><th>标题</th><th>状态</th><th>用时</th></tr>
+              <tr><td>1</td><td>2012-3-3 11:11:11</td><td>这是个标题</td><td>成功</td><td>3秒</td></tr>
+              <tr><td>2</td><td>2012-3-3 11:11:11</td><td>这是个标题</td><td>失败</td><td>13秒</td></tr>
+          </table>
+      </div>
+    </div>
+
+    <div id="statics_2">
+      <div class="title">关键词查询排行</div>
+      <div>
+            <div style="height:500px; float:left">
+                <p style="font-size:13px; color:gray">当天排行</p>
+                <table border="0">
+                    <tr><th>排行</th><th>关键词</th><th>查询次数</th></tr>
+                    <tr><td>1</td><td>百度</td><td>1000</td></tr>
+                    <tr><td>2</td><td>算法</td><td> 900</td></tr>
+                </table>
+            </div>
+            <div style="height:500px; float:left">
+                <p style="font-size:13px; color:gray">近七天排行</p>
+                <table border="0" >
+                    <tr><th>排行</th><th>关键词</th><th>查询次数</th></tr>
+                    <tr><td>1</td><td>百度</td><td>1000</td></tr>
+                    <tr><td>2</td><td>算法</td><td> 900</td></tr>
+                </table>
+            </div>
+            <div style="height:500px; float:left">
+                <p style="font-size:13px; color:gray">近三十天排行</p>
+                <table border="0" >
+                    <tr><th>排行</th><th>关键词</th><th>查询次数</th></tr>
+                    <tr><td>1</td><td>百度</td><td>1000</td></tr>
+                    <tr><td>2</td><td>算法</td><td> 900</td></tr>
+                </table>
+            </div>
+      </div>
+    </div>  <!-- end statics_5 -->
+
+    <div id="statics_1">
+        <div class="title">注册用户管理</div>
+        <div>
+            <p>用户 1-10 共 xx 个用户 </p>
+            <table border="0">
+            <tr><th>序号</th><th>注册时间</th><th>用户名</th><th>禁用?</th><th>删除?</th><th>修改密码</th></tr>
+            <tr><td>1</td><td>2011-1-1 11:11:11</td><td>小明</td><td>禁用</td><td>删除</td><td>修改密码</td></tr>
+            <tr><td>2</td><td>2011-1-1 11:11:11</td><td>小月</td><td>禁用</td><td>删除</td><td>修改密码</td></tr>
+            </table>
+        </div>
+    </div>
+    <!-- end statics -->
+        </div>
+    </div>
+    
+
+</body>
+<script>
+
+jQuery(document).ready(function(){ 
+    is_admin();
+});
+
+</script>
+</html>

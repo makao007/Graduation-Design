@@ -22,11 +22,26 @@ urls = (
     '/relative',  'relative',
     '/search', 'search',
     '/favicon.ico', 'favicon',
+    '/admin', 'admin',
+    '/user_all', 'all_user',
+    '/user_del','del_user',
+    '/user_edt','edt_user',
+    '/user_hid','hid_user',
+    '/search_log','search_log',
+    '/scrapy_log','scrapy_log',
+    '/login_log','login_log',
+    '/config_quy','config_quy',
+    '/config_sav','config_sav',
+    '/password', 'password',
+    '/admin_is_login','admin_is_login',
+    '/admin_login','admin_login',
+    '/admin_logout','admin_logout',
+    '/update_admin_password','admin_update_password',
     )
 
 app = web.application (urls, locals())
 if web.config.get('_session') is None:
-    session = web.session.Session(app, web.session.DiskStore('sessions'), initializer={'is_login': False, 'username':'', 'user_id': -1})
+    session = web.session.Session(app, web.session.DiskStore('sessions'), initializer={'is_login': False, 'username':'', 'user_id': -1, 'isadmin':False, 'admin_id': -1 } )
     web.config._session = session
 else:
     session = web.config._session
@@ -48,6 +63,9 @@ def check_user_cate (uid, fid):
     else:
         return False
 
+def md5 (s):
+    return hashlib.md5(s).hexdigest()
+
 class index:
     def GET(self):
         #return 'hello world'
@@ -58,7 +76,7 @@ class add_user:
         info = web.input()
         user = str(info.get('user')).strip()
         pawd = str(info.get('pawd1')).strip()
-        pawd = hashlib.md5(pawd).hexdigest()
+        pawd = md5(pawd)
         temp = dict(name=user)
         if len(db.select ('webuser', temp,where="username=$name", limit=1))>0:
             return response(0,'user exists')
@@ -74,7 +92,7 @@ class login:
             return response(1,session.username)
         info = web.input()
         user = info.get('username')
-        pawd = hashlib.md5(str(info.get('password',''))).hexdigest()
+        pawd = md5(info.get('password',''))
         temp = dict(name=user,pawd=pawd)
         result = db.select ('webuser', temp, where="username=$name and password=$pawd", limit=1) 
         if len(result) > 0:
@@ -237,13 +255,17 @@ class relative:
 
         #where to_tsvector('english', title) @@ to_tsquery('english', 'friend');
         #SELECT title FROM pgweb WHERE to_tsvector(title || body) @@ to_tsquery('create & table') ORDER BY last_mod_date DESC LIMIT 10;
+        return response_json (result)
 
-        web.header('Content-type','text/javascript')
-        data = json.dumps(result)
-        if web.input().get('callback'):
-            return web.input().get('callback') + '(' + data + ');'    #jsonp
-        else:
-            return result
+
+def response_json (result):
+    web.header('Content-type','text/javascript')
+    data = json.dumps(result)
+    if web.input().get('callback'):
+        return web.input().get('callback') + '(' + data + ');'    #jsonp
+    else:
+        return result
+
 
 class search :
     def GET (self):
@@ -258,13 +280,75 @@ class search :
 
         t2 = time.time()
         result = {'word': word, 'data': word_result, 'time':t2-t1}
+        return response_json (result)
 
-        web.header('Content-type','text/javascript')
-        data = json.dumps(result)
-        if web.input().get('callback'):
-            return web.input().get('callback') + '(' + data + ');'    #jsonp
+def to_admin():
+    if session.isadmin:
+        return True
+    else:
+        raise web.seeother ('/')
+
+class admin:
+    def GET (self):
+        return render.admin()
+
+class admin_is_login :
+    def GET (self):
+        if session.isadmin:
+            return response (1,'admin')
         else:
-            return result
+            return response (0, 'admin login first')
+
+class admin_login :
+    def GET (self):
+        username = web.input().get('username','').strip()
+        password = web.input().get('password','').strip()
+        password = md5(password)
+        temp = dict (user=username, pawd=password)
+        result = db.select ('webadmin', temp, where="username=$user and password=$pawd") 
+        if result:
+            session.isadmin = True
+            return response (1, 'login succeful')
+        else:
+            return response (0, 'login fail')
+
+class admin_logout:
+    def GET (self):
+        session.isadmin = False
+        raise web.seeother('/admin')
+
+class admin_update_password:
+    def GET (self):
+        to_admin()
+        admin_id = session.admin_id
+        old_password = md5(web.input().get('password0','').strip())
+        new_password = md5(web.input().get('password2','').strip())
+        if old_password and new_password:
+            temp = dict (uid = admin_id, pawd = old_password)
+            if db.update ('webadmin', temp, where="id=$uid and password=$pawd", password=new_password):
+                response (1, 'change password succ')
+            else:
+                response (0, 'change password fail')
+        else:
+            response (0, 'old and new password must not be empty')
+
+class config_qry:
+    def GET (self):
+        #to_admin()
+        result = db.select ('webconfig',limit=1) 
+        if result:
+            return response_json (json.loads(result[0]))
+        else:
+            return response_json ({})
+
+    def POST (self):
+        print web.input() 
+        #to_admin()
+        config['max_page'] = web.input().get('max_page')
+        config['max_deep'] = web.input().get('max_deep')
+        config['scr_wait'] = web.input().get('scr_wait')
+        config['scr_stop'] = web.input().get('scr_stop')
+        return response_json(config)
 
 class favicon:
     def GET (self):

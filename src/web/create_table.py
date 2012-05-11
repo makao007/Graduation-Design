@@ -28,12 +28,16 @@ cur.execute ("create table if not exists webadmin (id serial primary key, userna
 
 cur.execute ("create table if not exists webconfig (id serial primary key, config varchar(1024), created timestamp default now()) ; ")
 
-#cur.execute ("create table if not exists webquery_log (id serial primary key , 
+cur.execute ("create table if not exists webuser_login_log (id serial primary key, uid serial , username varchar(100), created timestamp default now(), operation char(1)) ;")
+
+cur.execute ("create table if not exists webquery_log (id serial primary key , word varchar(50), created timestamp default now() ); ")
 
 #cur.execute ("insert into webuser (username,password) values (%s,%s)", ('user',hashlib.md5('1234').hexdigest()) )
-cur.execute ("insert into webadmin (username,password) values (%s,%s)", ('user',hashlib.md5('1234').hexdigest()) )
+#cur.execute ("insert into webadmin (username,password) values (%s,%s)", ('user',hashlib.md5('1234').hexdigest()) )
+#cur.execute ("insert into webconfig (id,config) values (1,'%7B%22max_page%22%3A%20100%2C%20%22max_deep%22%3A%202%2C%20%22scy_stop%22%3A%2060%2C%20%22keyword_num%22%3A%2010%2C%20%22search_num%22%3A%2020%2C%20%22scy_wait%22%3A%2010%7D'); ")
 
 cur.execute ('select * from webuser;');
+cur.execute ('select * from webadmin;');
 result = cur.fetchone()
 print result
 

@@ -13,7 +13,10 @@
     'is_admin': '/is_admin',
     'admin_login':'/admin_login',
     'is_admin_login' : '/admin_is_login',
-    'update_admin_password': '/update_admin_password'
+    'update_admin_password': '/update_admin_password',
+    'load_config' : '/config_qry',
+    'save_config' : '/config_sav',
+    'login_log' : '/login_log',
 }
 
 function mul_line (s) {
@@ -307,12 +310,20 @@ function islogin() {
     });
 }
 
+
 function load_statics (id) {
     $('div#statics_right>div').hide();
     $('div#statics_'+id).show();
 
     $('#statics div ul li').css ('background','white');
     $('#statics div ul li:eq(' + (id-1) + ')').css ('background','#f3f3f3');
+    if (id==6){
+        $("#statics_6 input[type='password']").val('');
+    } else if (id==5) {
+        load_config ();
+    } else if (id==4) {
+        login_log ();
+    }
 }
 
 function admin_logout () {
@@ -330,11 +341,13 @@ function is_admin () {
         if (tmp.status == 1) {
             admin_load(tmp);
             // load data
-        } });
+        }else {
+        }
+    });
 }
 
 function admin_login () {
-    login_base ('admin_login', server_url.admin_login, function (tmp) {console.log(tmp); admin_load (tmp);}, function (tmp) {console.log(tmp); });
+    login_base ('admin_login', server_url.admin_login, function (tmp) {admin_load (tmp);}, function (tmp) {display_msg("用户名或密码错误"); });
 }
 
 function update_password() {
@@ -345,9 +358,9 @@ function update_password() {
     if (old_pawd && new_pawd1 && new_pawd2) {
         if (new_pawd1 == new_pawd2) {
             var url = server_url.update_admin_password + '?' + encode_url ({'password0':old_pawd,'password1':new_pawd1}) ;
-            console.log (url);
             $.get(url, {}, function (data) {
-                if (data.status ) {
+                var result = jQuery.parseJSON(data);
+                if (result.status==1 ) {
                     display_msg ("修改密码成功");
                 } else {
                     display_msg ("修改密码失败");
@@ -359,3 +372,65 @@ function update_password() {
         display_msg ("密码不能为空");
     }
 }
+
+function load_config () {
+    fetch_config_data(server_url['load_config']);
+}
+
+function load_config_info(data){
+    var input = $('#statics_5 input');
+    input[0].value = data['max_page'];
+    input[1].value = data['max_deep'];
+    input[2].value = data['scy_wait'];
+    input[3].value = data['scy_stop'];
+    input[4].value = data['search_num'];
+    input[5].value = data['keyword_num'];
+}
+
+function save_config_info (data) {
+    var input = $('#statics_5 input');
+    var data = {};
+    data['max_page'] = input[0].value;
+    data['max_deep'] = input[1].value;
+    data['scy_wait'] = input[2].value;
+    data['scy_stop'] = input[3].value;
+    data['search_num']  = input[4].value;
+    data['keyword_num'] = input[5].value;
+
+    var url = server_url['save_config'] + '?' + encode_url(data);
+    fetch_config_data (url);
+    display_msg ('操作修改配置成功');
+}
+
+function fetch_config_data(url) { 
+    $.get(url, {} , function (text) {
+        var result = $.parseJSON(text);
+        if (result.status == 1) {
+            if (result.text){
+                var config_data = $.parseJSON(decodeURIComponent(result.text))
+                load_config_info (config_data);
+                //load_config_info(config_data);
+            }
+        } else {
+            display_msg ("操作失败");
+        }
+    });
+}
+
+function login_log () {
+    var url = server_url.login_log;
+    $.getJSON(url, function (data) {
+        var table = $('#statics_4 table:first');
+        table.empty();
+        $("<tr><th>序号</th><th>时间</th><th>用户名</th><th>操作</th></tr>").appendTo(table);
+        $.each (data, function (index,item) {
+            var s = "<tr><th>" + (index+1) + "</th><th>" + item[0] + "</th><th>" + item[2] + "</th><th> " + (item[3]==1 ? "登录":"注销" ) + "</th></tr>";
+            $(s).appendTo(table);
+
+        });
+    });
+}
+        
+
+
+

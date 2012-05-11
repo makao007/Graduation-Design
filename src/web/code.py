@@ -1,14 +1,19 @@
+#!/user/bin/env python
+#coding=utf-8
+
 import web
 import json
 import hashlib
 import time
 import re
+import urllib
 
 #web.config.debug = False
 web.config.session_parameters['timeout'] = 3600
 
 db = web.database(dbn='postgres', user='webpy', pw='1234', db='webpy')
 render = web.template.render('templates/')
+
 urls = (
     '/', 'index',
     '/add_user','add_user',
@@ -30,7 +35,7 @@ urls = (
     '/search_log','search_log',
     '/scrapy_log','scrapy_log',
     '/login_log','login_log',
-    '/config_quy','config_quy',
+    '/config_qry','config_qry',
     '/config_sav','config_sav',
     '/password', 'password',
     '/admin_is_login','admin_is_login',
@@ -91,15 +96,17 @@ class login:
         if (session.is_login):
             return response(1,session.username)
         info = web.input()
-        user = info.get('username')
-        pawd = md5(info.get('password',''))
+        user = info.get('username').strip()
+        pawd = md5(info.get('password','').strip())
         temp = dict(name=user,pawd=pawd)
         result = db.select ('webuser', temp, where="username=$name and password=$pawd", limit=1) 
         if len(result) > 0:
             session.is_login = True
             session.username = user
             session.user_id  = result[0].id
-            print session.user_id
+
+            # add login log
+            db.insert ('webuser_login_log', uid=session.user_id,  username=session.username, operation='1')
 
             return response(1, user)
         else:
@@ -114,7 +121,10 @@ class islogin:
 
 class logout:
     def GET (self):
+        if session.is_login :
+            db.insert ('webuser_login_log', uid=session.user_id,  username=session.username, operation='2')
         session.kill()
+
         return 'logout'
 
 
@@ -308,6 +318,7 @@ class admin_login :
         result = db.select ('webadmin', temp, where="username=$user and password=$pawd") 
         if result:
             session.isadmin = True
+	    session.admin_id = result[0].id
             return response (1, 'login succeful')
         else:
             return response (0, 'login fail')
@@ -322,33 +333,53 @@ class admin_update_password:
         to_admin()
         admin_id = session.admin_id
         old_password = md5(web.input().get('password0','').strip())
-        new_password = md5(web.input().get('password2','').strip())
+        new_password = md5(web.input().get('password1','').strip())
         if old_password and new_password:
-            temp = dict (uid = admin_id, pawd = old_password)
-            if db.update ('webadmin', temp, where="id=$uid and password=$pawd", password=new_password):
-                response (1, 'change password succ')
+            temp = "id=%s and password='%s'" % (admin_id,old_password)
+            tmp  = dict(id=admin_id, pw=old_password)
+            result = db.select('webadmin', where=temp)
+            if result :
+                db.update ('webadmin', where=temp, password=new_password)
+                return response (1, 'change password succ')
             else:
-                response (0, 'change password fail')
+                return response (0, 'change password fail')
         else:
-            response (0, 'old and new password must not be empty')
+            return response (0, 'old and new password must not be empty')
 
 class config_qry:
     def GET (self):
         #to_admin()
-        result = db.select ('webconfig',limit=1) 
+        result = db.select ('webconfig',where="id=1", limit=1,what='config') 
         if result:
-            return response_json (json.loads(result[0]))
+            return response(1,result[0].config)
         else:
-            return response_json ({})
+            return response(0,'no config info')
 
-    def POST (self):
-        print web.input() 
-        #to_admin()
+class config_sav:
+    def GET (self):
+        config = {}	
         config['max_page'] = web.input().get('max_page')
         config['max_deep'] = web.input().get('max_deep')
-        config['scr_wait'] = web.input().get('scr_wait')
-        config['scr_stop'] = web.input().get('scr_stop')
-        return response_json(config)
+        config['scy_wait'] = web.input().get('scy_wait')
+        config['scy_stop'] = web.input().get('scy_stop')
+        config['search_num']  = web.input().get('search_num')
+        config['keyword_num'] = web.input().get('keyword_num')
+
+        text = urllib.quote(json.dumps(config))
+        if db.update ('webconfig', where="id=1", config = text):
+            return response(1, text)
+        else :
+            return response(0, 'save error')
+
+class login_log :
+    def GET (self):
+        offset = web.input().get('page','0').strip()
+        max_page = 20
+        tmp = db.select ('webuser_login_log', order="id desc", offset=offset, limit = max_page)
+        result = [[i.created.__str__()[:-7], i.uid, i.username,i.operation] for i in tmp]
+
+        return json.dumps(result)
+
 
 class favicon:
     def GET (self):

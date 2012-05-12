@@ -1,7 +1,7 @@
 ﻿server_url = {
     'add_user': '/add_user',
     'del_user': '/del_user',
-    'all_user': '/add_user',
+    'all_user': '/all_user',
     'add_cate': '/add_cate',
     'del_cate': '/del_cate',
     'edt_cate': '/edt_cate',
@@ -19,6 +19,7 @@
     'save_config' : '/config_sav',
     'login_log' : '/login_log',
     'query_log' : '/query_log',
+    'scrapy_log': '/scrapy_log'
 }
 
 function mul_line (s) {
@@ -48,16 +49,31 @@ function clear_cate_list () {
 
 function search() {
     var word = $('input#search_word').val().trim();
-    var path = server_url["search"] + "?" + encode_url ({"word": encodeURIComponent(word)})+'&callback=?';
+    var checkbox = $("#search input[type='checkbox']");
+    var cb_title, cb_desc, cb_content;
+    if (checkbox[0].checked)
+        cb_title = 1;
+    else
+        cb_title = 0;
+    if (checkbox[1].checked)
+        cb_desc = 1;
+    else
+        cb_desc = 0;
+    if (checkbox[2].checked)
+        cb_content = 1;
+    else
+        cb_content = 0;
+
+    var path = server_url["search"] + "?" + encode_url ({"word": encodeURIComponent(word), "cb_title":cb_title, 'cb_desc':cb_desc, 'cb_content':cb_content})+'&callback=?';
     if (word.length==0) {
         $('span#search_time').text('输出不能为空');
     }
 
-    $('span#search_time').empty();
+    $('span#search_time').text('正在查询...');
     $.getJSON(path, function (data) {
         $('input#search_word').val (data['word']);
         $('#search_content').empty();
-        $('span#search_time').text('共有 ' + data['data'].length + '条记录;  用时 ' + data['time']);
+        $('span#search_time').text('共有 ' + data['data'].length + '条记录;  用时 ' + (''+data['time']).substr(0,4) + '秒');
 
         load_record ($('#search_content'), data['data']);
     });
@@ -112,6 +128,7 @@ function edit_cate (id) {
     display_block('#edit_cate');
 }
 
+
 //删除一条目
 function del_cate (id) {
     display_block ('#del_cate');
@@ -144,6 +161,7 @@ function display_msg (msg) {
     var width = ($(document).width() - obj.width())/2;
     obj.css('left', width + '.px');
     obj.slideDown(800);
+    setTimeout (function () { obj.slideUp(800); }, 4000);
 }
 
 //将背景设为半透明，再显示一个块
@@ -264,7 +282,15 @@ function add_user () {
     }
     var parm  = encode_url ({'user': user, 'pawd1':pawd1 });
     var url   = server_url.add_user + '?' + parm;
-    $.get(url,{}, function (data) {display_msg(data);});
+    $.get(url,{}, function (data) {
+        var tmp = $.parseJSON(data);
+        if (tmp.status) {
+            display_msg ("成功注册用户");
+            hide_block ('#register'); 
+        } else {
+            display_msg(tmp.text);
+        }
+    });
 }
 
 function encode_url (d) {
@@ -327,6 +353,10 @@ function load_statics (id) {
         login_log ();
     } else if (id==2) {
         query_log ();
+    } else if (id==1) {
+        list_all_user();
+    } else if (id==3) {
+        scrapy_log ();
     }
 }
 
@@ -387,8 +417,9 @@ function load_config_info(data){
     input[1].value = data['max_deep'];
     input[2].value = data['scy_wait'];
     input[3].value = data['scy_stop'];
-    input[4].value = data['search_num'];
-    input[5].value = data['keyword_num'];
+    input[4].value = data['keep_time'];
+    input[5].value = data['search_num'];
+    input[6].value = data['keyword_num'];
 }
 
 function save_config_info (data) {
@@ -398,8 +429,9 @@ function save_config_info (data) {
     data['max_deep'] = input[1].value;
     data['scy_wait'] = input[2].value;
     data['scy_stop'] = input[3].value;
-    data['search_num']  = input[4].value;
-    data['keyword_num'] = input[5].value;
+    data['keep_time'] = input[4].value;
+    data['search_num']  = input[5].value;
+    data['keyword_num'] = input[6].value;
 
     var url = server_url['save_config'] + '?' + encode_url(data);
     fetch_config_data (url);
@@ -454,10 +486,65 @@ function list_all_user () {
     $.getJSON(url, function (data) {
         var table = $('#statics_1 table:first');
         table.empty();
-        $("<tr><th>序号</th><th>注册时间</th><th>用户名</th><th>禁用?</th><th>删除?</th><th>修改密码</th></tr>").appendTo(table);
+        $("<tr><th>序号</th><th>注册时间</th><th>用户名</th><th>删除?</th>").appendTo(table);
         $.each (data, function (index,item) {
-            var s = "<tr><th>" + (index+1) + "</th><th>" + item[0] + "</th><th>" + item[1] + "</th><th> " + (item[3]==1 ? "登录":"注销" ) + "</th></tr>";
+            var s = "<tr><th>" + (index+1) + "</th><th>" + item[2] + "</th><th>" + item[1] + "</th><th> " + "<input type='button' value='删除' class='button' onclick=del_user('" + item[0] + "','#del_user',list_all_user)></th></tr>";
             $(s).appendTo(table);
         });
     });
+}
+
+function del_user (id,block_id,cbk) {
+    var url = server_url.del_user;
+    display_block (block_id);
+    $(block_id + ' span:first').click( function () {
+        $.get(url+'?id='+id,{}, function (data) {
+            hide_block(block_id);
+            var tmp = $.parseJSON(data);
+            if (tmp.status) {
+                display_msg ("删除成功");
+                cbk();
+            } else {
+                display_msg (tmp.text);
+            }
+        });
+    });
+    $(block_id + " span:eq(1)").click ( function () {
+        hide_block (block_id);
+    });
+}
+
+function scrapy_log () {
+    var url = server_url.scrapy_log;
+    $.getJSON(url, function (data) {
+        var table = $('#statics_3 table:first');
+        table.empty();
+        $("<tr><th>序号</th><th>开始时间</th><th>结束时间</th><th>最大深度</th><th>最大页数</th><th>下载数</th></tr>").appendTo (table);
+        $.each (data, function (index, item) {
+            var tmp = "<tr><td>" + (index+1) + "</td><td>"+item.start_time+"</td><td>"+item.end_time+"</td><td>" + item.max_deep + "</td><td>" + item.max_page + "</td><td>" + item.unvisit_len + "</td></tr>" ;
+            $(tmp).appendTo(table);
+        });
+    });
+}
+
+function setCookie(name,value)//两个参数，一个是cookie的名子，一个是值
+{
+    var Days = 1; //此 cookie 将被保存 1 天
+    var exp  = new Date();    //new Date("December 31, 9998");
+    exp.setTime(exp.getTime() + Days*24*60*60*1000);
+    document.cookie = name + "="+ escape (value) + ";expires=" + exp.toGMTString();
+}
+function getCookie(name)//取cookies函数
+{
+    var arr = document.cookie.match(new RegExp("(^| )"+name+"=([^;]*)(;|$)"));
+    if(arr != null) return unescape(arr[2]); return null;
+
+}
+function delCookie(name)//删除cookie
+{
+    var exp = new Date();
+    exp.setTime(exp.getTime() - 1);
+    var cval=getCookie(name);
+    if(cval!=null) document.cookie= name + "="+cval+";expires="+exp.toGMTString();
+}
 

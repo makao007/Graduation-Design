@@ -27,7 +27,6 @@ class Scrapy:
         self.visited = []
         self.unvisit_hash = []
         self.visited_hash = []
-        self.visited_num = 0
 
         self.begin_time = ''
         self.ends_time  = ''
@@ -136,7 +135,7 @@ class Scrapy:
         return {'start_time': self.begin_time.__str__()[:-7], 'end_time':self.ends_time.__str__()[:-7], 
                 'source_url': self.src_url, 
                 'max_deep': self.max_deep, 'max_page': self.max_page,
-                'match_url' : self.mat_url, 'visited_len': self.visited_num,
+                'match_url' : self.mat_url, 'visited_len': self.cur_page,
                 'unvisit_len': len(self.unvisit_hash), 'focus_id' : self.focus_id }
 
     def join_visited (self, urls):
@@ -159,7 +158,6 @@ class Scrapy:
             self.pre_url = self.cur_url
             if not self.cur_url:
                 continue
-            self.visited_num += 1
             self._fetch()
             self._checkin (self._findurls())
             #self.visited.append(self.cur_url)

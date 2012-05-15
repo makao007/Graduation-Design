@@ -114,7 +114,7 @@ def split_word (config):
         #time.sleep(config.get('sleep'))
 
 def save_scrapy_log (data):
-    if data.get('visited_len') == 0:
+    if data.get('visited_len') == 1:
         return
     cur.execute ("insert into webscrapy_log (content) values (%s);" , (urllib.quote(json.dumps(data)),))
     conn.commit()
@@ -151,7 +151,9 @@ def go ():
             split_word (config)
             print 'sleep %s seconds ' % config.get('scy_stop')
             time.sleep(int(config.get('scy_stop')))
-        time.sleep(int(config.get('scy_stop')))
+        if len(focus_id):
+            print 'sleep %s seconds ' % config.get('scy_stop')
+            time.sleep(int(config.get('scy_stop')))
 
     #thread.start_new_thread(scrapy_content, (config,))
     #thread.start_new_thread(split_word, (config,))

@@ -521,7 +521,7 @@ function scrapy_log () {
         table.empty();
         $("<tr><th>序号</th><th>开始时间</th><th>结束时间</th><th>最大深度</th><th>最大页数</th><th>下载数</th></tr>").appendTo (table);
         $.each (data, function (index, item) {
-            var tmp = "<tr><td>" + (index+1) + "</td><td>"+item.start_time+"</td><td>"+item.end_time+"</td><td>" + item.max_deep + "</td><td>" + item.max_page + "</td><td>" + item.unvisit_len + "</td></tr>" ;
+            var tmp = "<tr><td>" + (index+1) + "</td><td>"+item.start_time+"</td><td>"+item.end_time+"</td><td>" + item.max_deep + "</td><td>" + item.max_page + "</td><td>" + item.visited_len + "</td></tr>" ;
             $(tmp).appendTo(table);
         });
     });

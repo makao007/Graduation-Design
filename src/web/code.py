@@ -241,6 +241,18 @@ class categorys:
         #jsonp
         return web.input().get('callback') + '(' + data + ');'
 
+def search_with_focus (fid, keyword, offset=0, num=15):
+        # no index
+        #sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,weburl_focus, weburl_content_split where weburl_focus.focus_id=$fid and weburl_focus.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and to_tsvector(weburl_content_split.title|| weburl_content_split.description) @@ to_tsquery($keyword) limit 15;"
+
+        # with index
+        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,weburl_focus, weburl_content_split where weburl_focus.focus_id=$fid and weburl_focus.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and weburl_content_split.textsearchable_index_col @@ to_tsquery($keyword) limit $numu offset $offset;"
+        temp = db.query(sql, vars={'fid':fid, 'keyword': keyword, 'numu':num, 'offset':offset})
+        focus_result = []
+        for tmp  in temp:
+            focus_result.append ([tmp.download_time.__str__()[:-7], tmp.title, tmp.description, tmp.url])
+        return focus_result 
+
 class relative:
     def GET (self):
         to_login()
@@ -248,20 +260,11 @@ class relative:
         focus_id= get_user_focus_id(user_id)
 
         ss2 = get_user_keyword(user_id,'|')
-
-        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,weburl_focus, weburl_content_split where weburl_focus.focus_id=$fid and weburl_focus.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and to_tsvector(weburl_content_split.title|| weburl_content_split.description) @@ to_tsquery($keyword) ;"
-
+        
         result = {}
         for fid in focus_id:
-            temp = db.query(sql, vars={'fid':fid, 'keyword':ss2.get(fid,' ')[:-1]})
-            focus_result = []
-            for tmp  in temp:
-                focus_result.append ( [tmp.download_time.__str__()[:-7], tmp.title, tmp.description, tmp.url ] )
-            result[fid] = focus_result
+            result[fid] = search_with_focus (fid, ss2.get(fid,'')[:-1])
 
-
-        #where to_tsvector('english', title) @@ to_tsquery('english', 'friend');
-        #SELECT title FROM pgweb WHERE to_tsvector(title || body) @@ to_tsquery('create & table') ORDER BY last_mod_date DESC LIMIT 10;
         return response_json (result)
 
 

@@ -257,16 +257,22 @@ class relative:
     def GET (self):
         to_login()
         user_id = session.user_id
-        focus_id= get_user_focus_id(user_id)
+        
+        fid = web.input().get('fid')
+        num = int(web.input().get('num','15'))
+        offset = int(web.input().get('offset','0')) * num
 
+        if fid :
+            focus_id = [int(fid)]
+        else: 
+            focus_id= get_user_focus_id(user_id)
         ss2 = get_user_keyword(user_id,'|')
         
         result = {}
         for fid in focus_id:
-            result[fid] = search_with_focus (fid, ss2.get(fid,'')[:-1])
+            result[fid] = search_with_focus (fid, ss2.get(fid,'')[:-1],offset,num)
 
         return response_json (result)
-
 
 def response_json (result):
     web.header('Content-type','text/javascript')
@@ -279,7 +285,7 @@ def response_json (result):
 
 class search :
     def GET (self):
-        search_num = 20
+        search_num = 15 
         t1 = time.time()
         word = web.input().get('word','').strip()
         if not word:
@@ -300,8 +306,10 @@ class search :
         if match_field.endswith('||'):
             match_field = match_field[:-2]
 
+        offset = int(web.input().get('offset',0)) * search_num
+
         word = re.sub(r"\s+",'&',word)
-        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls, weburl_content_split where weburls.id=weburl_content_split.url_id and to_tsvector(%s) @@ to_tsquery($keyword) limit %s ;" % (match_field, search_num)
+        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls, weburl_content_split where weburls.id=weburl_content_split.url_id and to_tsvector(%s) @@ to_tsquery($keyword) limit %s offset %s ;" % (match_field, search_num, offset)
         temp = db.query(sql, vars={'keyword': word})
         word_result= []
         for tmp  in temp:

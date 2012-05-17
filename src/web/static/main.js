@@ -47,33 +47,46 @@ function clear_cate_list () {
     clear_div('#manage_list');
 }
 
-function search() {
+function search(opt) {
     var word = $('input#search_word').val().trim();
     var checkbox = $("#search input[type='checkbox']");
-    var cb_title, cb_desc, cb_content;
-    if (checkbox[0].checked)
-        cb_title = 1;
-    else
-        cb_title = 0;
-    if (checkbox[1].checked)
-        cb_desc = 1;
-    else
-        cb_desc = 0;
-    if (checkbox[2].checked)
-        cb_content = 1;
-    else
-        cb_content = 0;
+    var cb_title, cb_desc, cb_content, offset, num_page;
+    cb_title = checkbox[0].checked ? 1 : 0;
+    cb_desc  = checkbox[1].checked ? 1 : 0;
+    cb_content = checkbox[2].checked ? 1 : 0;
+    num_page = 15;
+    $('#s_prev_search').attr('disabled',false);
+    $('#s_next_search').attr('disabled',false);
+    if (opt) {
+        offset = (opt>0 ? 1 : -1) + parseInt($('#h_cur_search').val());
+        if (offset < 0) {
+            $('#s_prev_search').attr('disabled',true);
+            return ;
+        } else {
+            if (offset==0)
+                $('#s_prev_search').attr('disabled',true);
+            $('#h_cur_search').val (offset);
+        }
+    } else {
+        offset = 0;
+        $('#h_cur_search').val (0);
+        $('#s_prev_search').attr('disabled',true);
+    }
 
-    var path = server_url["search"] + "?" + encode_url ({"word": encodeURIComponent(word), "cb_title":cb_title, 'cb_desc':cb_desc, 'cb_content':cb_content})+'&callback=?';
+    var path = server_url["search"] + "?" + encode_url ({"word": encodeURIComponent(word), "cb_title":cb_title, 'cb_desc':cb_desc, 'cb_content':cb_content, "offset": offset})+'&callback=?';
     if (word.length==0) {
         $('span#search_time').text('输出不能为空');
+        return ;
     }
 
     $('span#search_time').text('正在查询...');
     $.getJSON(path, function (data) {
         $('input#search_word').val (data['word']);
         $('#search_content').empty();
-        $('span#search_time').text('共有 ' + data['data'].length + '条记录;  用时 ' + (''+data['time']).substr(0,4) + '秒');
+        $('span#search_time').text('第'+(offset+1)+'页 有 ' + data['data'].length + '条结果  用时 ' + (''+data['time']).substr(0,4) + '秒');
+        if (data['data'].length != num_page) {
+            $('#s_next_search').attr('disabled', true);
+        }
 
         load_record ($('#search_content'), data['data']);
     });
@@ -85,7 +98,7 @@ function load_cate (names) {
     clear_cate_list();
     var div = $('#main_left_content');
     $.each (names, function (index, value) {
-            $('<li title="'+ value[3] + '" onclick=load_content(' + value[0] + '); >' + value[1] + '</li>').appendTo(div);
+            $('<li title="'+ value[3] + '" onclick=load_content(' + value[0] + ',' + index + '); >' + value[1] + '</li>').appendTo(div);
     });
 }
 
@@ -100,12 +113,51 @@ function load_record (div, data) {
 }
 
 //查询的主要界面
-function load_content (id) {
+function load_content (id,tmp) {
     clear_value();
     var contents = mydata.data[id];
     var div = $('#main_right_content');
+    $('#h_cur_page').val (0);
+    $('#h_focus_id').val (id);
+    $('#s_cur_page').text('');
+    $('#s_next_page').attr('disabled',false);
+    $('#s_prev_page').attr('disabled',true);
     load_record (div, contents);
+
+    var div = $('#main_left_content li');
+    div.css ('background','white');
+    $(div[tmp]).css('background','#f3f3f3');
 }
+
+//翻页查询
+function relative_page (opt) {
+    var page = parseInt($('#h_cur_page').val()) + parseInt(opt);
+    var fid  = $('#h_focus_id').val();
+    if ( page < 0 || !fid) {
+        return ;
+    } else {
+        clear_value();
+
+        $('#h_cur_page').val(page);
+        var url = server_url["relative"] + "?" + encode_url({"fid":fid, "offset": page})+"&callback=?";
+        $('#s_cur_page').text('正在查询...');
+        console.log (url);
+        $.getJSON(url, {}, function (data) {
+            clear_value();
+
+            $( (opt>0 ? '#s_prev_page':'#s_next_page')).attr('disabled',false);
+            if (data[fid].length < 15) {
+                $('#s_next_page').attr('disabled',true);
+            } else if (page == 0) {
+                $('#s_prev_page').attr('disabled',true);
+            }
+
+            load_record ($('#main_right_content'), data[fid]);
+            $('#s_cur_page').text('第 ' + (page+1) + '页  共' + data[fid].length + ' 条记录');
+        });
+    }
+}
+
 
 //显示管理条目
 function edit_cate (id) {
@@ -548,3 +600,11 @@ function delCookie(name)//删除cookie
     if(cval!=null) document.cookie= name + "="+cval+";expires="+exp.toGMTString();
 }
 
+function top_menu(div) {
+    var s = "body>div#nav~div[id!='"+div+"']";
+    console.log(s);
+    $(s).hide();
+    $('#'+div).show();
+    if (div=='login') 
+        $('#aboutme').show();
+}

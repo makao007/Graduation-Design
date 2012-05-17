@@ -16,8 +16,8 @@
         div#nav ul li {float:left; list-style:none;  font-size:14px; cursor:pointer; height:24px; padding:5px 10px 0px 10px;}
         div#nav ul li:hover {background:#222; color:white;}
 
-        div#main {margin:10px 0px;height:500px; width:100%; }
-        div#main_left,div#main_right {float:left; scroll:auto; height:500px;}
+        div#main {margin:10px 0px;height:530px; width:100%; }
+        div#main_left,div#main_right {float:left; scroll:auto; height:100%;}
         div#main_left {width:200px; border:1px solid #666; }
         div#main_left_content {padding:0px; margin:0px}
         div#main_left_content li {height:25px; margin:3px 5px; border-bottom:1px solid #33FFFF; cursor:pointer; display:block; text-align:left;} 
@@ -28,7 +28,7 @@
         div#main_right_title ul {margin:3px 0px 10px 5px;}
         div#main_right_title ul li {float:left; }
 
-        div#main_right_content {text-align:left; font-size:15px; margin:3px 5px; overflow:auto; height:410px;}
+        div#main_right_content {text-align:left; font-size:15px; margin:3px 5px; overflow:auto; height:440px;}
         div#main_right_content ul {height:18px; margin:3px 0px 10px 0px; border-bottom:1px dashed #e5e5e5;}
         div#main_right_content ul li {float:left;}
         div#main_right_content ul:nth-child(even) {background:#f3f3f3;}
@@ -68,11 +68,11 @@
 
         div#message {position: fixed; top:3px; width:auto; height:auto;  background:#E8D098; z-index:4; left:200px; padding:3px 14px; display:none; font-size:14px;}
 
-        div#search {width:700px; margin:0 auto; height:600px; background:white; border:1px solid lightblue; display:none; margin-top:10px;}
+        div#search {width:700px; margin:0 auto; height:545px; background:white; border:1px solid lightblue; display:none; margin-top:10px;}
 
-        div#search_title {border-bottom:1px solid #333; height:18px; border-top:1px solid #333; margin:10px 4px; font-size:14px; padding:5px 5px;}
+        div#search_title {border-bottom:1px solid #333; height:28px; border-top:1px solid #333; margin:10px 4px; font-size:14px; padding:5px 5px;}
         div#search_title ul li {float:left;}
-        div#search_content {height:480px;  overflow:auto;}
+        div#search_content {height:420px;  overflow:auto;}
         div#search_content ul {margin:3px 0px 10px 5px; clear:both; height:auto;}
         div#search_content ul li {float:left; font-size:14px; color:#666; margin:5px 2px;}
         div#search_content ul li a {text-decoration:none;}
@@ -88,6 +88,11 @@
         div#statics div.statics_right ul li{float:left; }
 
         #statics_1,#statics_2,#statics_3,#statics_4,#statics_5,#statics_6 {display:none;}
+
+
+        div#aboutme { float:left;}
+        div#aboutme ul {margin-left:150px; margin-top:100px;}
+        div#aboutme>ul>li {font-size:20px; padding: 10px; list-style-type:square;}
 
         .title {color:black; display:block; background-color:#00FFFF; font-size:14px; height:23px; padding:5px 5px; font-weight:bold; border-bottom:1px solid #eee; clear:both; text-align:left;}
         .item1,.item2,.item3,.item4,.item5 {overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:8px;}
@@ -123,10 +128,10 @@
 <body>
     <div id="nav">
       <ul>
-        <li onclick="$$('#manage').hide();$$('#main').hide(); $$('#search').hide(); $$('#login').show();">首页</li>
-        <li onclick="$$('#manage').hide(); $$('#login').hide(); $$('#search').hide(); $$('#main').show();">显示查询</li>
-        <li onclick="$$('#main').hide();$$('#login').hide(); $$('#search').hide(); $$('#manage').show();">配置信息</li>
-        <li onclick="$$('#main').hide();$$('#login').hide(); $$('#manage').hide(); $$('#search').show();">搜索</li>
+        <li onclick="top_menu('login');">首页</li>
+        <li onclick="top_menu('main');">显示查询</li>
+        <li onclick="top_menu('manage');">配置信息</li>
+        <li onclick="top_menu('search');">搜索</li>
         <li onclick="logout();">退出</li>
       </ul>
     </div>
@@ -141,7 +146,16 @@
                 <ul>
                   <li class="item1">序号</li>
                   <li class="item2">处理时间</li>
-                  <li class="item3">链接标题</li>
+                  <li class="item3">链接标题
+                    &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; 
+                    <input type="hidden" id="h_cur_page" value="0">
+                    <input type="hidden" id="h_focus_id" value="">
+                    <input type="button" id="s_prev_page" value="上一页" class="button" style="border:1px solid #222" onclick="relative_page(-1);"> &nbsp;&nbsp;
+                    <input type="button" id="s_next_page" value="下一页" class="button" style="border:1px solid #222" onclick="relative_page(1) ;">
+                    &nbsp;&nbsp; &nbsp;&nbsp;
+                    <span style="font-size:14px; color:gray;" id="s_cur_page"></span>
+
+                  </li>
                 </ul>
             </div>
             <div id="main_right_content"></div> 
@@ -228,12 +242,31 @@
             <ul>
               <li class="item1">序号</li>
               <li class="item2">处理时间</li>
-              <li class="item3">链接标题</li>
+              <li class="item3">链接标题
+                    &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; 
+                    <input type="hidden" id="h_cur_search" value="0">
+                    <input type="hidden" id="h_search" value="0" >
+                    <input type="button" id="s_prev_search" disabled value="上一页" class="button" style="border:1px solid #222;font-size:13px;" onclick="search(-1); return false;" > &nbsp;&nbsp;
+                    <input type="button" id="s_next_search" disabled value="下一页" class="button" style="border:1px solid #222;font-size:13px;" onclick="search(1); return false;"  >
+                    &nbsp;&nbsp; &nbsp;&nbsp;
+                    <span style="font-size:14px; color:gray;" id="s_cur_page"></span>
+                
+              </li>
+
             </ul>
         </div>
         <div id="search_content"></div> 
     </div> <!-- end search -->
     
+
+    <div id="aboutme">
+      <ul>
+        <p>互联网舆情监控系统</p>
+        <li>多关键词，多网络来源</li>
+        <li>添加多条关注</li>
+        <li>强力搜索</li>
+      </ul>
+    </div>
 
 
 </body>

@@ -4,6 +4,7 @@ import psycopg2
 import hashlib
 import thread
 import time
+import json,urllib
 
 from pymmseg import mmseg
 
@@ -28,18 +29,22 @@ def utf8(s):
 
 def pagesave (url, title, desc, text, download_time, last_modify, focus_id ):
     global cur,conn
-    print url,title
     title = utf8(title)
     desc  = utf8(desc)
     text  = utf8(text)
+    url   = utf8(url)
     cur.execute ("delete from weburls where url=%s ;" , (url,))
 
-    cur.execute ("insert into weburls(url, title, description, content, last_modify) values (%s,%s,%s,%s,%s) RETURNING id;", (url, title, desc, text, last_modify))
+    
+    try:
+        cur.execute ("insert into weburls(url, title, description, content, last_modify) values (%s,%s,%s,%s,%s) RETURNING id;", (url, title, desc, text, last_modify))
 
-    temp = cur.fetchone()[0]    #url_id
+        temp = cur.fetchone()[0]    #url_id
 
-    #cur.execute ("select focus_id from websource where url=%s ;", (url,))
-    cur.execute ("insert into weburl_focus (url_id, focus_id) values (%s, %s) ; " , (temp, focus_id)) 
+        cur.execute ("insert into weburl_focus (url_id, focus_id) values (%s, %s) ; " , (temp, focus_id)) 
+    except:
+        print url, title,desc
+        pass
 
     conn.commit()
 
@@ -53,7 +58,7 @@ def check_db_url (url, update_time = 60):
         return False
 
 def get_visited_urls (update_time = 60):
-    sql = "select url from weburls where download_time > current_timestamp - interval '%s minutes' ;"
+    sql = "select url from weburls where download_time > current_timestamp - interval '%s hours' ;"
     cur.execute (sql , (update_time,))
     return [i[0] for i in cur.fetchall()]
 
@@ -108,26 +113,48 @@ def split_word (config):
 
         #time.sleep(config.get('sleep'))
 
+def save_scrapy_log (data):
+    if data.get('visited_len') == 1:
+        return
+    cur.execute ("insert into webscrapy_log (content) values (%s);" , (urllib.quote(json.dumps(data)),))
+    conn.commit()
+
 #url, save_func, match_url, max_deep, max_page
-def scrapy_content(config):
-        #while 1:
-        focus_id = get_all_fid()
-        for fid in focus_id:
-            scr = scrapy.Scrapy('', pagesave,fid,'',2,100)
-            scr.join_visited(get_visited_urls())
+def scrapy_content(config,fid):
+            scr = scrapy.Scrapy('', pagesave,fid,'',int(config.get('max_deep')),int(config.get('max_page')))
+            scr.join_visited(get_visited_urls(int(config.get('keep_time'))))
             scr.join_queue(get_all_urls(fid))
-            scr.start_scrapy()        #begin scrapy 
-            print 'scrapy done. wait ... %d seconds' % config.get('sleep')
+            data = scr.start_scrapy()        #begin scrapy 
+            save_scrapy_log (data)
 
         #time.sleep(config.get('sleep'))
 
 
+def load_config ():
+    cur.execute("select * from webconfig where id=1")
+    result = cur.fetchone()
+    if result:
+        result = json.loads(urllib.unquote(result[1]))
+    else:
+        result = {'max_page': 100, 'max_deep': 2, 'scy_stop': 60, 'search_num': 20, 'keyword_num': 10, 'scy_wait': 10}
+
+    import socket
+    socket.setdefaulttimeout(int(result.get('scy_wait')))
+    return result
+
 def go ():
-    config = {'sleep':3*6}
     while 1:
-        scrapy_content (config)
-        split_word (config)
-        time.sleep(config.get('sleep'))
+        focus_id = get_all_fid()
+        for fid in focus_id:
+            config = load_config()
+            scrapy_content (config,fid)
+            split_word (config)
+            print 'sleep %s seconds ' % config.get('scy_stop')
+            time.sleep(int(config.get('scy_stop')))
+        if len(focus_id):
+            print 'sleep %s seconds ' % config.get('scy_stop')
+            time.sleep(int(config.get('scy_stop')))
+
     #thread.start_new_thread(scrapy_content, (config,))
     #thread.start_new_thread(split_word, (config,))
 

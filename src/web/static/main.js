@@ -1,6 +1,7 @@
 ﻿server_url = {
     'add_user': '/add_user',
     'del_user': '/del_user',
+    'all_user': '/all_user',
     'add_cate': '/add_cate',
     'del_cate': '/del_cate',
     'edt_cate': '/edt_cate',
@@ -17,6 +18,8 @@
     'load_config' : '/config_qry',
     'save_config' : '/config_sav',
     'login_log' : '/login_log',
+    'query_log' : '/query_log',
+    'scrapy_log': '/scrapy_log'
 }
 
 function mul_line (s) {
@@ -44,18 +47,46 @@ function clear_cate_list () {
     clear_div('#manage_list');
 }
 
-function search() {
+function search(opt) {
     var word = $('input#search_word').val().trim();
-    var path = server_url["search"] + "?" + encode_url ({"word": encodeURIComponent(word)})+'&callback=?';
-    if (word.length==0) {
-        $('span#search_time').text('输出不能为空');
+    var checkbox = $("#search input[type='checkbox']");
+    var cb_title, cb_desc, cb_content, offset, num_page;
+    cb_title = checkbox[0].checked ? 1 : 0;
+    cb_desc  = checkbox[1].checked ? 1 : 0;
+    cb_content = checkbox[2].checked ? 1 : 0;
+    num_page = 15;
+    $('#s_prev_search').attr('disabled',false);
+    $('#s_next_search').attr('disabled',false);
+    if (opt) {
+        offset = (opt>0 ? 1 : -1) + parseInt($('#h_cur_search').val());
+        if (offset < 0) {
+            $('#s_prev_search').attr('disabled',true);
+            return ;
+        } else {
+            if (offset==0)
+                $('#s_prev_search').attr('disabled',true);
+            $('#h_cur_search').val (offset);
+        }
+    } else {
+        offset = 0;
+        $('#h_cur_search').val (0);
+        $('#s_prev_search').attr('disabled',true);
     }
 
-    $('span#search_time').empty();
+    var path = server_url["search"] + "?" + encode_url ({"word": encodeURIComponent(word), "cb_title":cb_title, 'cb_desc':cb_desc, 'cb_content':cb_content, "offset": offset})+'&callback=?';
+    if (word.length==0) {
+        $('span#search_time').text('输出不能为空');
+        return ;
+    }
+
+    $('span#search_time').text('正在查询...');
     $.getJSON(path, function (data) {
         $('input#search_word').val (data['word']);
         $('#search_content').empty();
-        $('span#search_time').text('共有 ' + data['data'].length + '条记录;  用时 ' + data['time']);
+        $('span#search_time').text('第'+(offset+1)+'页 有 ' + data['data'].length + '条结果  用时 ' + (''+data['time']).substr(0,4) + '秒');
+        if (data['data'].length != num_page) {
+            $('#s_next_search').attr('disabled', true);
+        }
 
         load_record ($('#search_content'), data['data']);
     });
@@ -67,7 +98,7 @@ function load_cate (names) {
     clear_cate_list();
     var div = $('#main_left_content');
     $.each (names, function (index, value) {
-            $('<li title="'+ value[3] + '" onclick=load_content(' + value[0] + '); >' + value[1] + '</li>').appendTo(div);
+            $('<li title="'+ value[3] + '" onclick=load_content(' + value[0] + ',' + index + '); >' + value[1] + '</li>').appendTo(div);
     });
 }
 
@@ -82,12 +113,51 @@ function load_record (div, data) {
 }
 
 //查询的主要界面
-function load_content (id) {
+function load_content (id,tmp) {
     clear_value();
     var contents = mydata.data[id];
     var div = $('#main_right_content');
+    $('#h_cur_page').val (0);
+    $('#h_focus_id').val (id);
+    $('#s_cur_page').text('');
+    $('#s_next_page').attr('disabled',false);
+    $('#s_prev_page').attr('disabled',true);
     load_record (div, contents);
+
+    var div = $('#main_left_content li');
+    div.css ('background','white');
+    $(div[tmp]).css('background','#f3f3f3');
 }
+
+//翻页查询
+function relative_page (opt) {
+    var page = parseInt($('#h_cur_page').val()) + parseInt(opt);
+    var fid  = $('#h_focus_id').val();
+    if ( page < 0 || !fid) {
+        return ;
+    } else {
+        clear_value();
+
+        $('#h_cur_page').val(page);
+        var url = server_url["relative"] + "?" + encode_url({"fid":fid, "offset": page})+"&callback=?";
+        $('#s_cur_page').text('正在查询...');
+        console.log (url);
+        $.getJSON(url, {}, function (data) {
+            clear_value();
+
+            $( (opt>0 ? '#s_prev_page':'#s_next_page')).attr('disabled',false);
+            if (data[fid].length < 15) {
+                $('#s_next_page').attr('disabled',true);
+            } else if (page == 0) {
+                $('#s_prev_page').attr('disabled',true);
+            }
+
+            load_record ($('#main_right_content'), data[fid]);
+            $('#s_cur_page').text('第 ' + (page+1) + '页  共' + data[fid].length + ' 条记录');
+        });
+    }
+}
+
 
 //显示管理条目
 function edit_cate (id) {
@@ -109,6 +179,7 @@ function edit_cate (id) {
 
     display_block('#edit_cate');
 }
+
 
 //删除一条目
 function del_cate (id) {
@@ -142,6 +213,7 @@ function display_msg (msg) {
     var width = ($(document).width() - obj.width())/2;
     obj.css('left', width + '.px');
     obj.slideDown(800);
+    setTimeout (function () { obj.slideUp(800); }, 4000);
 }
 
 //将背景设为半透明，再显示一个块
@@ -262,7 +334,15 @@ function add_user () {
     }
     var parm  = encode_url ({'user': user, 'pawd1':pawd1 });
     var url   = server_url.add_user + '?' + parm;
-    $.get(url,{}, function (data) {display_msg(data);});
+    $.get(url,{}, function (data) {
+        var tmp = $.parseJSON(data);
+        if (tmp.status) {
+            display_msg ("成功注册用户");
+            hide_block ('#register'); 
+        } else {
+            display_msg(tmp.text);
+        }
+    });
 }
 
 function encode_url (d) {
@@ -323,6 +403,12 @@ function load_statics (id) {
         load_config ();
     } else if (id==4) {
         login_log ();
+    } else if (id==2) {
+        query_log ();
+    } else if (id==1) {
+        list_all_user();
+    } else if (id==3) {
+        scrapy_log ();
     }
 }
 
@@ -383,8 +469,9 @@ function load_config_info(data){
     input[1].value = data['max_deep'];
     input[2].value = data['scy_wait'];
     input[3].value = data['scy_stop'];
-    input[4].value = data['search_num'];
-    input[5].value = data['keyword_num'];
+    input[4].value = data['keep_time'];
+    input[5].value = data['search_num'];
+    input[6].value = data['keyword_num'];
 }
 
 function save_config_info (data) {
@@ -394,8 +481,9 @@ function save_config_info (data) {
     data['max_deep'] = input[1].value;
     data['scy_wait'] = input[2].value;
     data['scy_stop'] = input[3].value;
-    data['search_num']  = input[4].value;
-    data['keyword_num'] = input[5].value;
+    data['keep_time'] = input[4].value;
+    data['search_num']  = input[5].value;
+    data['keyword_num'] = input[6].value;
 
     var url = server_url['save_config'] + '?' + encode_url(data);
     fetch_config_data (url);
@@ -426,11 +514,97 @@ function login_log () {
         $.each (data, function (index,item) {
             var s = "<tr><th>" + (index+1) + "</th><th>" + item[0] + "</th><th>" + item[2] + "</th><th> " + (item[3]==1 ? "登录":"注销" ) + "</th></tr>";
             $(s).appendTo(table);
-
         });
     });
 }
-        
+function query_log () {
+    var url = server_url.query_log;
+    $.getJSON(url, function (data) {
+        var tables = $('#statics_2 table');
+        $.each (tables, function (inde, table) {
+            table = $(table);
+            table.empty();
+            $("<tr><th class='ttem1'>排行</th><th class='ttem2'>关键词</th><th class='ttem3'>查询次数</th></tr>").appendTo(table);
+            $.each (data[inde], function (index,item) {
+                var s = "<tr><th class='ttem1'>" + (index+1) + "</th><th><div class='ttem2'>" + item[1] + "</div></th><th class='ttem3'>" + item[0] + "</th><th>"; 
+                $(s).appendTo(table);
+            });
+        });
+    });
+}
 
+function list_all_user () {
+    var url = server_url.all_user;
+    $.getJSON(url, function (data) {
+        var table = $('#statics_1 table:first');
+        table.empty();
+        $("<tr><th>序号</th><th>注册时间</th><th>用户名</th><th>删除?</th>").appendTo(table);
+        $.each (data, function (index,item) {
+            var s = "<tr><th>" + (index+1) + "</th><th>" + item[2] + "</th><th>" + item[1] + "</th><th> " + "<input type='button' value='删除' class='button' onclick=del_user('" + item[0] + "','#del_user',list_all_user)></th></tr>";
+            $(s).appendTo(table);
+        });
+    });
+}
 
+function del_user (id,block_id,cbk) {
+    var url = server_url.del_user;
+    display_block (block_id);
+    $(block_id + ' span:first').click( function () {
+        $.get(url+'?id='+id,{}, function (data) {
+            hide_block(block_id);
+            var tmp = $.parseJSON(data);
+            if (tmp.status) {
+                display_msg ("删除成功");
+                cbk();
+            } else {
+                display_msg (tmp.text);
+            }
+        });
+    });
+    $(block_id + " span:eq(1)").click ( function () {
+        hide_block (block_id);
+    });
+}
 
+function scrapy_log () {
+    var url = server_url.scrapy_log;
+    $.getJSON(url, function (data) {
+        var table = $('#statics_3 table:first');
+        table.empty();
+        $("<tr><th>序号</th><th>开始时间</th><th>结束时间</th><th>最大深度</th><th>最大页数</th><th>下载数</th></tr>").appendTo (table);
+        $.each (data, function (index, item) {
+            var tmp = "<tr><td>" + (index+1) + "</td><td>"+item.start_time+"</td><td>"+item.end_time+"</td><td>" + item.max_deep + "</td><td>" + item.max_page + "</td><td>" + item.visited_len + "</td></tr>" ;
+            $(tmp).appendTo(table);
+        });
+    });
+}
+
+function setCookie(name,value)//两个参数，一个是cookie的名子，一个是值
+{
+    var Days = 1; //此 cookie 将被保存 1 天
+    var exp  = new Date();    //new Date("December 31, 9998");
+    exp.setTime(exp.getTime() + Days*24*60*60*1000);
+    document.cookie = name + "="+ escape (value) + ";expires=" + exp.toGMTString();
+}
+function getCookie(name)//取cookies函数
+{
+    var arr = document.cookie.match(new RegExp("(^| )"+name+"=([^;]*)(;|$)"));
+    if(arr != null) return unescape(arr[2]); return null;
+
+}
+function delCookie(name)//删除cookie
+{
+    var exp = new Date();
+    exp.setTime(exp.getTime() - 1);
+    var cval=getCookie(name);
+    if(cval!=null) document.cookie= name + "="+cval+";expires="+exp.toGMTString();
+}
+
+function top_menu(div) {
+    var s = "body>div#nav~div[id!='"+div+"']";
+    console.log(s);
+    $(s).hide();
+    $('#'+div).show();
+    if (div=='login') 
+        $('#aboutme').show();
+}

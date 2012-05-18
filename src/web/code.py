@@ -16,7 +16,6 @@ render = web.template.render('templates/')
 
 urls = (
     '/', 'index',
-    '/add_user','add_user',
     '/test', 'mytest',
     '/login', 'login', 
     '/logout', 'logout',
@@ -28,13 +27,13 @@ urls = (
     '/search', 'search',
     '/favicon.ico', 'favicon',
     '/admin', 'admin',
-    '/user_all', 'all_user',
-    '/user_del','del_user',
-    '/user_edt','edt_user',
-    '/user_hid','hid_user',
+    '/all_user', 'user_all',
+    '/add_user','add_user',
+    '/del_user','del_user',
     '/search_log','search_log',
     '/scrapy_log','scrapy_log',
     '/login_log','login_log',
+    '/query_log','query_log',
     '/config_qry','config_qry',
     '/config_sav','config_sav',
     '/password', 'password',
@@ -57,7 +56,7 @@ def response (flag, text) :
     return """{"status":%s, "text":"%s" }""" % (flag, text)
 
 def to_login():
-    if not session.is_login and session.user_id < 0:
+    if not session.is_login or session.user_id < 0:
         raise web.seeother('/')
 
 def check_user_cate (uid, fid):
@@ -93,8 +92,8 @@ class add_user:
 
 class login:
     def GET(self):
-        if (session.is_login):
-            return response(1,session.username)
+        #if (session.is_login):
+        #   return response(1,session.username)
         info = web.input()
         user = info.get('username').strip()
         pawd = md5(info.get('password','').strip())
@@ -114,7 +113,7 @@ class login:
 
 class islogin:
     def GET(self):
-        if (session.is_login):
+        if (session.is_login and session.user_id > -1):
             return response(1, session.username)
         else :
             return response(0, '')
@@ -124,7 +123,6 @@ class logout:
         if session.is_login :
             db.insert ('webuser_login_log', uid=session.user_id,  username=session.username, operation='2')
         session.kill()
-
         return 'logout'
 
 
@@ -132,8 +130,7 @@ class mytest:
     def GET (self):
         result = db.select ("webfocus")
         data   = [i.title for i in result]
-        title  = {'title': data}
-        return json.dumps ({'title':result})
+        return json.dumps({'titie':data,'userid':session.user_id})
         #return session.user_id
 
 class del_cate:
@@ -244,29 +241,38 @@ class categorys:
         #jsonp
         return web.input().get('callback') + '(' + data + ');'
 
+def search_with_focus (fid, keyword, offset=0, num=15):
+        # no index
+        #sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,weburl_focus, weburl_content_split where weburl_focus.focus_id=$fid and weburl_focus.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and to_tsvector(weburl_content_split.title|| weburl_content_split.description) @@ to_tsquery($keyword) limit 15;"
+
+        # with index
+        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,weburl_focus, weburl_content_split where weburl_focus.focus_id=$fid and weburl_focus.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and weburl_content_split.textsearchable_index_col @@ to_tsquery($keyword) limit $numu offset $offset;"
+        temp = db.query(sql, vars={'fid':fid, 'keyword': keyword, 'numu':num, 'offset':offset})
+        focus_result = []
+        for tmp  in temp:
+            focus_result.append ([tmp.download_time.__str__()[:-7], tmp.title, tmp.description, tmp.url])
+        return focus_result 
+
 class relative:
     def GET (self):
         to_login()
         user_id = session.user_id
-        focus_id= get_user_focus_id(user_id)
+        
+        fid = web.input().get('fid')
+        num = int(web.input().get('num','15'))
+        offset = int(web.input().get('offset','0')) * num
 
+        if fid :
+            focus_id = [int(fid)]
+        else: 
+            focus_id= get_user_focus_id(user_id)
         ss2 = get_user_keyword(user_id,'|')
-
-        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,weburl_focus, weburl_content_split where weburl_focus.focus_id=$fid and weburl_focus.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and to_tsvector(weburl_content_split.title|| weburl_content_split.description) @@ to_tsquery($keyword) ;"
-
+        
         result = {}
         for fid in focus_id:
-            temp = db.query(sql, vars={'fid':fid, 'keyword':ss2.get(fid,' ')[:-1]})
-            focus_result = []
-            for tmp  in temp:
-                focus_result.append ( [tmp.download_time.__str__()[:-7], tmp.title, tmp.description, tmp.url ] )
-            result[fid] = focus_result
+            result[fid] = search_with_focus (fid, ss2.get(fid,'')[:-1],offset,num)
 
-
-        #where to_tsvector('english', title) @@ to_tsquery('english', 'friend');
-        #SELECT title FROM pgweb WHERE to_tsvector(title || body) @@ to_tsquery('create & table') ORDER BY last_mod_date DESC LIMIT 10;
         return response_json (result)
-
 
 def response_json (result):
     web.header('Content-type','text/javascript')
@@ -279,10 +285,31 @@ def response_json (result):
 
 class search :
     def GET (self):
+        search_num = 15 
         t1 = time.time()
-        word = web.input().get('word','Java').strip()
+        word = web.input().get('word','').strip()
+        if not word:
+            result = {'word': word, 'data': [], 'time':0}
+            return response_json (result)
+
+        for i  in word.split(' '):
+            db.insert ('webquery_log', word=i)
+        match_field = ''
+        if web.input().get('cb_title') and web.input().get('cb_title')=='1' :
+            match_field += 'weburl_content_split.title||'
+        if web.input().get('cb_desc') and web.input().get('cb_desc')=='1' :
+            match_field += 'weburl_content_split.description||'
+        if web.input().get('cb_content') and web.input().get('cb_content')=='1' :
+            match_field += 'weburl_content_split.content'
+        if not match_field:
+            match_field = 'weburl_content_split.title'
+        if match_field.endswith('||'):
+            match_field = match_field[:-2]
+
+        offset = int(web.input().get('offset',0)) * search_num
+
         word = re.sub(r"\s+",'&',word)
-        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls, weburl_content_split where weburls.id=weburl_content_split.url_id and to_tsvector(weburl_content_split.title|| weburl_content_split.description) @@ to_tsquery($keyword) ;"
+        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls, weburl_content_split where weburls.id=weburl_content_split.url_id and to_tsvector(%s) @@ to_tsquery($keyword) limit %s offset %s ;" % (match_field, search_num, offset)
         temp = db.query(sql, vars={'keyword': word})
         word_result= []
         for tmp  in temp:
@@ -318,7 +345,7 @@ class admin_login :
         result = db.select ('webadmin', temp, where="username=$user and password=$pawd") 
         if result:
             session.isadmin = True
-	    session.admin_id = result[0].id
+            session.admin_id = result[0].id
             return response (1, 'login succeful')
         else:
             return response (0, 'login fail')
@@ -348,7 +375,7 @@ class admin_update_password:
 
 class config_qry:
     def GET (self):
-        #to_admin()
+        to_admin()
         result = db.select ('webconfig',where="id=1", limit=1,what='config') 
         if result:
             return response(1,result[0].config)
@@ -357,6 +384,7 @@ class config_qry:
 
 class config_sav:
     def GET (self):
+        to_admin()
         config = {}	
         config['max_page'] = web.input().get('max_page')
         config['max_deep'] = web.input().get('max_deep')
@@ -364,6 +392,7 @@ class config_sav:
         config['scy_stop'] = web.input().get('scy_stop')
         config['search_num']  = web.input().get('search_num')
         config['keyword_num'] = web.input().get('keyword_num')
+        config['keep_time']   = web.input().get('keep_time')
 
         text = urllib.quote(json.dumps(config))
         if db.update ('webconfig', where="id=1", config = text):
@@ -373,6 +402,7 @@ class config_sav:
 
 class login_log :
     def GET (self):
+        to_admin()
         offset = web.input().get('page','0').strip()
         max_page = 20
         tmp = db.select ('webuser_login_log', order="id desc", offset=offset, limit = max_page)
@@ -380,12 +410,51 @@ class login_log :
 
         return json.dumps(result)
 
+class query_log :
+    def GET (self):
+        to_admin()
+        max_page = 10
+        #last 24 hour
+        sql = "select word,count(id) as mid from webquery_log where created > current_timestamp - interval '%s hours' group by (word) order by mid desc limit %s";
+        tmp1 = db.query ( (sql % (24, max_page)))
+        result1 = [[i.mid, i.word] for i in tmp1]
+
+        tmp2 = db.query ( (sql % (24*7, max_page)))
+        result2 = [[i.mid, i.word] for i in tmp2]
+
+        tmp3 = db.query ( (sql % (24*30, max_page)))
+        result3 = [[i.mid, i.word] for i in tmp3]
+
+        return json.dumps ([result1, result2, result3])
+
+class user_all :
+    def GET (self):
+        to_admin()
+        tmp = db.select ('webuser')
+        result = [[i.id, i.username, i.created.__str__()[:-7]] for i in tmp]
+        return json.dumps (result)
+
+class del_user  :
+    def GET (self):
+        to_admin()
+        id = web.input().get('id')
+        tmp = db.delete ('webuser', where=('id='+id) )
+        if tmp:
+            return response(1, 'delete user succ')
+        else:
+            return response(0, 'delete user fail')
+
+class scrapy_log:
+    def GET (self):
+        to_admin()
+        tmp = db.select ('webscrapy_log', limit=20, what='content')
+        result = [json.loads(urllib.unquote(i.content)) for i in tmp]
+        return json.dumps(result)
 
 class favicon:
     def GET (self):
         web.redirect ('/static/favicon.ico')
         #raise web.seeother('/static/favicon.ico')
     
-
 if __name__ == "__main__":
     app.run()

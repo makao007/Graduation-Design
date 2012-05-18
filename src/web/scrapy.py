@@ -6,12 +6,11 @@ import datetime
 import urllib,urllib2
 import hashlib
 import urlparse
-import socket
-socket.setdefaulttimeout(10)
+
 
 class Scrapy:
     # source url, max deep, match url
-    def __init__ (self, url,save_func,focus_id, match_url='', max_deep=2,max_page=1000):
+    def __init__ (self, url,save_func,focus_id, match_url='', max_deep=2,max_page=100):
         self.src_url = url
         self.pre_url = ''
         self.cur_url = url
@@ -58,7 +57,7 @@ class Scrapy:
             self.content = response.read()
         except:
             self.content = ''
-            print 'download %s error ' % self.cur_url
+            print 'error download %s' % self.cur_url
 
         ana = Analyze(self.cur_url, self.content, datetime.datetime.now(), last_modify, self.save_func, self.focus_id)
         ana.save_record()
@@ -133,11 +132,11 @@ class Scrapy:
 
     def _response (self) :
         self.ends_time  = datetime.datetime.now()
-        return {'start_time': self.begin_time, 'end_time':self.ends_time, 
-                'source_url': self.src_url,  'max_deep': self.max_deep, 
-                'match_url' : self.mat_url,  'visited_url': self.visited, 
-                'visited_hash': self.visited_hash, 'unvisit_url': self.unvisit,
-                'unvisit_hash': self.unvisit_hash }
+        return {'start_time': self.begin_time.__str__()[:-7], 'end_time':self.ends_time.__str__()[:-7], 
+                'source_url': self.src_url, 
+                'max_deep': self.max_deep, 'max_page': self.max_page,
+                'match_url' : self.mat_url, 'visited_len': self.cur_page,
+                'unvisit_len': len(self.unvisit_hash), 'focus_id' : self.focus_id }
 
     def join_visited (self, urls):
         for url in urls:

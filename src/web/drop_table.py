@@ -8,13 +8,11 @@ dbpawd = "1234"
 conn = psycopg2.connect(database=dbname, user=dbuser, password=dbpawd, host='localhost', port=5432)
 cur  = conn.cursor()
 
-cur.execute ("drop table weburl_content_split")
-cur.execute ("drop table webkeywords")
-cur.execute ("drop table weburl_focus")
-cur.execute ("drop table websource")
-cur.execute ("drop table weburls")
-cur.execute ("drop table webfocus")
-cur.execute ("drop table webuser")
+table_name = ['webconfig', 'webuser_login_log','webquery_log', 'webscrapy_log', 'webadmin','weburl_content_split', 'webkeywords','weburl_focus','websource','weburls','webfocus', 'webuser']
+
+for i in table_name :
+    sql = "drop table %s " % i
+    cur.execute (sql)
 
 conn.commit()
 cur.close()

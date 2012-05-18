@@ -141,7 +141,6 @@ function relative_page (opt) {
         $('#h_cur_page').val(page);
         var url = server_url["relative"] + "?" + encode_url({"fid":fid, "offset": page})+"&callback=?";
         $('#s_cur_page').text('正在查询...');
-        console.log (url);
         $.getJSON(url, {}, function (data) {
             clear_value();
 
@@ -211,6 +210,7 @@ function display_msg (msg) {
     var time = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + '<br/>';
     obj.html(time + msg);
     var width = ($(document).width() - obj.width())/2;
+    var width = ($(document).width() - 100)/2;
     obj.css('left', width + '.px');
     obj.slideDown(800);
     setTimeout (function () { obj.slideUp(800); }, 4000);
@@ -260,9 +260,10 @@ function login_base (block_id, url, call_back1, call_back2 ) {
     if (user.length > 0 && pawd.length > 0) {
         var parm = encode_url ({'username':user, 'password': pawd});
         var url  = url + '?' + parm;
-        $.get (url, {}, function (data) {
-            var tmp = $.parseJSON(data);                                     
-            if (tmp.status == 1) {
+        $.get (url, {}, function (data1) {
+            console.log(data1);
+            var tmp = $.parseJSON(data1);                                     
+            if (tmp && tmp.status == 1) {
                 $('#' + block_id).hide();
                 call_back1(tmp);   // login succ
             } else {
@@ -279,7 +280,12 @@ function login () {
             $('#nav ul li:first').html('您好：' + tmp.text); 
             $('#nav ul li:first').attr('onclick',''); 
             $('#login').hide(); get_category_info(); 
-        }, function(tmp){display_msg (tmp.text);} );
+        }, function(tmp){
+            console.log(tmp);
+            if (tmp)
+                 display_msg(tmp.text);
+            ;} 
+        );
 }
 
 function add_cate () {
@@ -380,7 +386,7 @@ function get_category_info () {
 function islogin() {
     $.get(server_url.islogin,{}, function (data) {
         var tmp = $.parseJSON(data);
-        if (tmp.status == 1) {
+        if (tmp && tmp.status == 1) {
             $('#login').hide();
             $('#nav ul li:first').html('您好：' + tmp.text);
             get_category_info();

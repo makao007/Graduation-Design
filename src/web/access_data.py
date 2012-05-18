@@ -149,11 +149,8 @@ def go ():
             config = load_config()
             scrapy_content (config,fid)
             split_word (config)
-            print 'sleep %s seconds ' % config.get('scy_stop')
-            time.sleep(int(config.get('scy_stop')))
-        if len(focus_id):
-            print 'sleep %s seconds ' % config.get('scy_stop')
-            time.sleep(int(config.get('scy_stop')))
+        print 'sleep %s seconds ' % config.get('scy_stop')
+        time.sleep(int(config.get('scy_stop')))
 
     #thread.start_new_thread(scrapy_content, (config,))
     #thread.start_new_thread(split_word, (config,))

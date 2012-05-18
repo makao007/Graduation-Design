@@ -247,7 +247,7 @@ def search_with_focus (fid, keyword, offset=0, num=15):
 
         # with index
         sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls,weburl_focus, weburl_content_split where weburl_focus.focus_id=$fid and weburl_focus.url_id=weburl_content_split.url_id and weburls.id=weburl_content_split.url_id and weburl_content_split.textsearchable_index_col @@ to_tsquery($keyword) limit $numu offset $offset;"
-        temp = db.query(sql, vars={'fid':fid, 'keyword': keyword, 'numu':num, 'offset':offset})
+        temp = db.query(sql, vars={'fid':fid, 'keyword': keyword.replace(' ','\ '), 'numu':num, 'offset':offset})
         focus_result = []
         for tmp  in temp:
             focus_result.append ([tmp.download_time.__str__()[:-7], tmp.title, tmp.description, tmp.url])
@@ -309,7 +309,7 @@ class search :
         offset = int(web.input().get('offset',0)) * search_num
 
         word = re.sub(r"\s+",'&',word)
-        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls, weburl_content_split where weburls.id=weburl_content_split.url_id and to_tsvector(%s) @@ to_tsquery($keyword) limit %s offset %s ;" % (match_field, search_num, offset)
+        sql = "select weburls.title, weburls.description, weburls.download_time, weburls.url from weburls, weburl_content_split where weburls.id=weburl_content_split.url_id and %s @@ to_tsquery($keyword) limit %s offset %s ;" % (match_field, search_num, offset)
         temp = db.query(sql, vars={'keyword': word})
         word_result= []
         for tmp  in temp:

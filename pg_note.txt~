@@ -55,7 +55,7 @@ UPDATE pgweb SET textsearchable_index_col =
 
 alter table weburl_content_split add column textsearchable_index_col tsvector;
 update weburl_content_split set textsearchable_index_col = to_tsvector('english', coalesce(title,'') || coalesce(description,''));
-create index pgweb_in4 on weburl_content_split using gin (textsearchable_index_col);
+create index pgweb_in4 on weburl_content_split  gin (textsearchable_index_col);
 
 CREATE INDEX pgweb_id1 ON weburl_content_split USING gin(to_tsvector('english', title));
 CREATE INDEX pgweb_id2 ON weburl_content_split USING gin(to_tsvector('english', description));

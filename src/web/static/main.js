@@ -47,6 +47,7 @@ function clear_cate_list () {
     clear_div('#manage_list');
 }
 
+//搜索，支持翻页
 function search(opt) {
     var word = $('input#search_word').val().trim();
     var checkbox = $("#search input[type='checkbox']");
@@ -102,6 +103,7 @@ function load_cate (names) {
     });
 }
 
+//加载用户关注的内容
 function load_record (div, data) {
     $.each (data, function (index, value) {
         var ul = $('<ul/>');
@@ -203,6 +205,7 @@ function hide_block (id) {
     $('#background').hide();
 }
 
+//显示一条消息，动画从上向下显示， 4秒后自动隐藏
 function display_msg (msg) {
     var obj = $('#message');
     obj.hide();
@@ -244,11 +247,12 @@ function load_manage (data) {
             });
 }
 
-
+// 注销退出
 function logout () {
     $.get (server_url.logout,{},function(data){ location.reload(); });
 }
 
+// 用户登录与管理员登录共用
 function login_base (block_id, url, call_back1, call_back2 ) {
     var input = $('#' + block_id + ' input');
     var user  = input[0].value;
@@ -275,6 +279,7 @@ function login_base (block_id, url, call_back1, call_back2 ) {
     }
 }
 
+//用户登录
 function login () {
     login_base ('login', server_url.login, function (tmp){
             $('#nav ul li:first').html('您好：' + tmp.text); 
@@ -288,6 +293,7 @@ function login () {
         );
 }
 
+//添加一个关注条目
 function add_cate () {
     var add_cate = $('#edit_cate');
     var id       = add_cate.find('input')[0].value;
@@ -321,6 +327,7 @@ function add_cate () {
     });
 }
 
+//注册一个用户
 function add_user () {
     var input = $('#register input');
     var user  = input[0].value;
@@ -351,6 +358,7 @@ function add_user () {
     });
 }
 
+// 将一个字典转为URL参数形式的字符串
 function encode_url (d) {
     var result = '';
     for (var i in d) {
@@ -361,6 +369,7 @@ function encode_url (d) {
     return result;
 }
 
+//
 function reload_data () {
     mydata = {'name_info':[], 'data':[]};
     reflash_data ();
@@ -372,7 +381,7 @@ function reflash_data () {
     load_manage(mydata.name_info);
 }
 
-
+//取得相关信息
 function get_category_info () {
     jQuery.getJSON('categorys?callback=?',function (data) {
         mydata = data;
@@ -383,6 +392,7 @@ function get_category_info () {
     });
 }
 
+//判断是否已登录
 function islogin() {
     $.get(server_url.islogin,{}, function (data) {
         var tmp = $.parseJSON(data);
@@ -418,9 +428,11 @@ function load_statics (id) {
     }
 }
 
+//管理员退出
 function admin_logout () {
     location.href = "/admin_logout";
 }
+
 
 function admin_load (tmp) {
     $('#statics').show();
@@ -438,10 +450,12 @@ function is_admin () {
     });
 }
 
+//管理员登录
 function admin_login () {
     login_base ('admin_login', server_url.admin_login, function (tmp) {admin_load (tmp);}, function (tmp) {display_msg("用户名或密码错误"); });
 }
 
+//管理员修改密码
 function update_password() {
     var input = $('#statics_6 input');
     var old_pawd  = input[0].value.trim();
@@ -465,6 +479,7 @@ function update_password() {
     }
 }
 
+//加载配置信息
 function load_config () {
     fetch_config_data(server_url['load_config']);
 }
@@ -480,6 +495,7 @@ function load_config_info(data){
     input[6].value = data['keyword_num'];
 }
 
+//保存配置信息
 function save_config_info (data) {
     var input = $('#statics_5 input');
     var data = {};

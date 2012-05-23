@@ -30,7 +30,6 @@ urls = (
     '/all_user', 'user_all',
     '/add_user','add_user',
     '/del_user','del_user',
-    '/search_log','search_log',
     '/scrapy_log','scrapy_log',
     '/login_log','login_log',
     '/query_log','query_log',
